@@ -49,7 +49,7 @@
     "mqtt": "^5.3.5",
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
-    "react-charts": "^0.0.1",
+    "react-charts": "^2.0.0-beta.7",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.4.4",
