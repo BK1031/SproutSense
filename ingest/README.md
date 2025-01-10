@@ -2,14 +2,16 @@
 
 Data ingestion service for the SproutSense agricultural monitoring system.
 
-### Setup
+## Getting Started
 
-1. Install Poetry
-2. Install dependencies:
-   ```bash
-   poetry install
-   ```
+Make sure you have [Poetry](https://python-poetry.org/docs/) installed.
 
-### Development
+First, install the project dependencies:
+```
+$ poetry install
+```
 
-Activate the virtual environment:
+Finally, run the project:
+```
+$ poetry run ingest
+```
