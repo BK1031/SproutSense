@@ -11,6 +11,8 @@ fastapi = "^0.104.0"
 uvicorn = "^0.23.2"
 pydantic = "^2.4.2"
 python-dotenv = "^1.0.0"
+flask = "^3.1.0"
+flask-cors = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
