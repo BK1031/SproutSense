@@ -1,11 +1,12 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./views/**/*.{ts,tsx}"
   ],
   prefix: "",
   theme: {
@@ -18,6 +19,9 @@ module.exports = {
     },
     extend: {
       colors: {
+        darkGray: "#55646F",
+        cardGreen1: "#449E47", // Light green
+        cardGreen2: "#007504", // Dark green
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -88,5 +92,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [import("tailwindcss-animate")],
 };
