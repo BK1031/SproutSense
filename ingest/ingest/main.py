@@ -1,9 +1,5 @@
-def main():
-    """
-    Run the main application logic.
-    """
-    print("Hello, World!")
+from ingest import app
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
 
