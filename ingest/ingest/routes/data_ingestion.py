@@ -20,8 +20,6 @@ def ingest():
     try:
         unpacked_data = struct.unpack(BYTE_ARRAY_FORMAT, base_station_data)
         N, P, K, Temp, Humidity, SoilMoisture, UV = unpacked_data
-        print(f"N: {N}, P: {P}, K: {K}, Temp: {Temp}, Humidity: {Humidity}, Soil Moisture: {SoilMoisture}, UV: {UV}")
-        print(type(SoilMoisture)) 
         new_sensor_data = SensorData(nitrogen=N, phosphorus=P, potassium=K,
                                     humidity=Humidity, soilmoisture=SoilMoisture, uv=UV)
         db.session.add(new_sensor_data)
