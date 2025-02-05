@@ -44,7 +44,9 @@ typedef struct {
 #define PMTK_RESET "$PMTK104*37\r\n"
 #define PMTK_NONE "$PMTK010,000*2F\r\n"
 #define PMTK_SET_NMEA_OUTPUT_RMCONLY "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n"
+//#define SENSOR_READ_DELAY 700000000
 #define SENSOR_READ_DELAY 1000
+
 
 #define TSL2591_ADDR             (0x29 << 1) // 7-bit address shifted for 8-bit I2C format
 #define TSL2591_REG_ENABLE       0x00
@@ -121,6 +123,8 @@ char msg[50];
 int dht_flag = 0;
 
 volatile uint32_t timer_ticks = 0;
+
+int rtc_mins = 1;
 
 /* USER CODE END PV */
 
@@ -218,7 +222,18 @@ DHT_Data readDHT(void){
 	return dht_data;
 }
 
-void readAndTransmitDHT(void) {
+//void readAndTransmitDHT(void) {
+//	DHT_Data sensorData = readDHT();
+//
+//    if (sensorData.humidity > 0 || sensorData.temperature > 0) {
+//	    sprintf(msg, "Humidity: %d%%, Temperature: %u°C\r\n", sensorData.humidity, sensorData.temperature);
+//	    HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//    } else {
+//	     //throw error
+//	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//    }
+//}
+DHT_Data readAndTransmitDHT(void) {
 	DHT_Data sensorData = readDHT();
 
     if (sensorData.humidity > 0 || sensorData.temperature > 0) {
@@ -228,6 +243,8 @@ void readAndTransmitDHT(void) {
 	     //throw error
 	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
     }
+
+    return sensorData;
 }
 
 float calcLux(uint16_t ch0_data, uint16_t ch1_data){
@@ -313,7 +330,7 @@ float calculateSoilScore(float volt){
 	score = num/50;
 	return score;
 }
-
+uint32_t currentTime = 0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM5) {
@@ -325,6 +342,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		HAL_UART_Transmit(&huart2, (uint8_t*)lux_buffer, strlen(lux_buffer), HAL_MAX_DELAY);
 	}
     if (htim->Instance == TIM4) {
+//    	WE PROBABLY DONT NEED THIS
 //    	comment back this code when in a location that the gps can get a signal
 //        parseGNRMC((const char*)gpsBuffer);
 //	    HAL_UART_Transmit(&huart2, gpsBuffer, strlen((char*)gpsBuffer), 1000);
@@ -332,9 +350,33 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM2) {
 
     	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//    	maybe see if delay_us() fucks shit up in here
+
+    	/*__HAL_TIM_SET_COUNTER(&htim3, 0);
+		while(current_sensor < 3){
+			currentTime += __HAL_TIM_GET_COUNTER(&htim3);
+			if (currentTime - lastSensorReadTime >= SENSOR_READ_DELAY) {
+//				lastSensorReadTime = currentTime;
+
+				switch(current_sensor) {
+					case 0:
+						NPK_ReadSensor_DMA();
+						break;
+					case 1:
+						Phosphorus_ReadSensor_DMA();
+						break;
+					case 2:
+						Potassium_ReadSensor_DMA();
+						break;
+				}
+//				currentTime = HAL_GetTick();
+				current_sensor = current_sensor + 1;
+				lastSensorReadTime = currentTime;
+			}
+		}
+		current_sensor = 0;*/
 
 		uint32_t currentTime = HAL_GetTick();
-
 		if (currentTime - lastSensorReadTime >= SENSOR_READ_DELAY) {
 			lastSensorReadTime = currentTime;
 
@@ -476,6 +518,7 @@ void parseGNRMC(const char *nmeaBuffer) {
 }
 
 void gps_init(void){
+//	this needs to be huart3
 	HAL_UART_Transmit(&huart1, (uint8_t*)PMTK_RESET, strlen(PMTK_RESET), 1000);
     HAL_Delay(1000);
     HAL_UART_Transmit(&huart3, (uint8_t*)PMTK_SET_NMEA_OUTPUT_RMCONLY, strlen(PMTK_SET_NMEA_OUTPUT_RMCONLY), 1000);
@@ -499,11 +542,44 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
 //	 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	  parseGNRMC((const char*)gpsBuffer);
 	  HAL_UART_Transmit(&huart2, gpsBuffer, strlen((char*)gpsBuffer), 1000);
+	  rtc_mins += 1;
+	  Set_RTC_Alarm(rtc_mins);
 //	  HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rAlarm Triggered! LED ON\n\r", 27, HAL_MAX_DELAY);
 //	  alarmBool = 1;
 }
 
-void Set_RTC_Alarm(void)
+//void Set_RTC_Alarm(void)
+//{
+//    RTC_AlarmTypeDef sAlarm = {0};
+//    uint8_t buffer[3];
+//
+//
+////    HAL_UART_Transmit(&huart2, (uint8_t*)"Enter Alarm Hours (00-23): ", 27, HAL_MAX_DELAY);
+////    UART_Receive(buffer, 2);
+//    sAlarm.AlarmTime.Hours = 0;
+//
+////    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Alarm Minutes (00-59): ", 30, HAL_MAX_DELAY);
+////    UART_Receive(buffer, 2);
+//    sAlarm.AlarmTime.Minutes = 1;
+//
+//    sAlarm.AlarmTime.Seconds = 0;
+//
+//    sAlarm.AlarmTime.SubSeconds = 0;
+//    sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+//    sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+//    sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
+//    sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+//    sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+//    sAlarm.AlarmDateWeekDay = 0x01;
+//    sAlarm.Alarm = RTC_ALARM_A;
+//
+//    if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rAlarm is set!\n\r", 17, HAL_MAX_DELAY);
+//}
+void Set_RTC_Alarm(int mins)
 {
     RTC_AlarmTypeDef sAlarm = {0};
     uint8_t buffer[3];
@@ -515,7 +591,7 @@ void Set_RTC_Alarm(void)
 
 //    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Alarm Minutes (00-59): ", 30, HAL_MAX_DELAY);
 //    UART_Receive(buffer, 2);
-    sAlarm.AlarmTime.Minutes = 1;
+    sAlarm.AlarmTime.Minutes = mins;
 
     sAlarm.AlarmTime.Seconds = 0;
 
@@ -534,6 +610,46 @@ void Set_RTC_Alarm(void)
     }
     HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rAlarm is set!\n\r", 17, HAL_MAX_DELAY);
 }
+
+void create_sensor_payload(uint8_t temperature, uint8_t humidity,
+                           uint16_t nitrogen, uint16_t phosphorus, uint16_t potassium,
+                           uint32_t soil_moisture, uint16_t uv,
+                           uint8_t *buffer) {
+    buffer[0] = temperature;
+    buffer[1] = humidity;
+
+    buffer[2] = (nitrogen >> 8) & 0xFF;
+    buffer[3] = nitrogen & 0xFF;
+
+    buffer[4] = (phosphorus >> 8) & 0xFF;
+    buffer[5] = phosphorus & 0xFF;
+
+    buffer[6] = (potassium >> 8) & 0xFF;
+    buffer[7] = potassium & 0xFF;
+
+    buffer[8]  = (soil_moisture >> 24) & 0xFF;
+    buffer[9]  = (soil_moisture >> 16) & 0xFF;
+    buffer[10] = (soil_moisture >> 8) & 0xFF;
+    buffer[11] = soil_moisture & 0xFF;
+
+    buffer[12] = (uv >> 8) & 0xFF;
+    buffer[13] = uv & 0xFF;
+}
+
+
+void publish_sensor_data(uint16_t module_id, uint8_t *data, size_t length) {
+	uint8_t buffer[length + 2];  // Create a new buffer with space for the module ID
+	buffer[0] = (module_id >> 8) & 0xFF;  // High byte of module_id
+	buffer[1] = module_id & 0xFF;         // Low byte of module_id
+
+	memcpy(&buffer[2], data, length);  // Copy sensor data after module ID
+
+	HAL_UART_Transmit(&huart3, buffer, sizeof(buffer), HAL_MAX_DELAY);
+}
+
+//uint8_t sensor_data[14];
+uint8_t temperature = 0;
+uint8_t humidity = 0;
 
 /* USER CODE END 0 */
 
@@ -579,7 +695,7 @@ int main(void)
   MX_I2C1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-  Set_RTC_Alarm();
+  Set_RTC_Alarm(rtc_mins);
   StartUartDmaReceive();
 
   HAL_TIM_Base_Start(&htim3);
@@ -599,6 +715,12 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
+//  N_Data[100];
+//  NPK_ReadSensor_DMA();
+//  sprintf(N_Data, "N: %d\r\n",
+//  					nitrogen_value);
+//  HAL_UART_Transmit(&huart2, (uint8_t*)N_Data, strlen(N_Data), 1000);
+
 
 
   /* USER CODE END 2 */
@@ -610,10 +732,34 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	  if(dht_flag == 1){
-		  readAndTransmitDHT();
+		  DHT_Data temp_hum = readAndTransmitDHT();
+		  temperature = temp_hum.temperature;;   // 25°C
+		  humidity = temp_hum.humidity;
 		  dht_flag = 0;
 	  }
+
+	  uint16_t MODULE_ID = 4;
+	  uint8_t sensor_data[14];  // Buffer to hold sensor data
+
+	  // Example sensor readings
+//	  uint8_t temperature = 25;   // 25°C
+//	  uint8_t humidity = 60;      // 60%
+	  uint16_t nitrogen = 300;    // 300 mg/kg
+	  uint16_t phosphorus = 154;  // 150 mg/kg
+	  uint16_t potassium = 206;   // 200 mg/kg
+	  uint32_t soil_moisture = 123456; // Example soil moisture value
+	  uint16_t uv = 47;          // UV index 45
+
+
+
+	  create_sensor_payload(temperature, humidity, nitrogen_value, phosphorus_value, potassium_value, adc_value, lux, sensor_data);
+
+	  // Send over UART
+	  publish_sensor_data(MODULE_ID, sensor_data, sizeof(sensor_data));
+
+	  HAL_Delay(5000);  // Wait 1 second
 
 
 
@@ -940,9 +1086,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 49999;
+  htim2.Init.Prescaler = 7999 ;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 65535;
+  htim2.Init.Period = 599999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -1075,9 +1221,9 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 59999;
+  htim5.Init.Prescaler = 7999 ;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 39999;
+  htim5.Init.Period = 149999;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
