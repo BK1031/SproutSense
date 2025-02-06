@@ -60,6 +60,12 @@ void loop()
       timeSinceLastPacket = millis(); //Timestamp this packet
 
       SerialUSB.println("Received message");
+      SerialUSB.print("Raw bytes: ");
+      for (int i = 0; i < len; i++) {
+          SerialUSB.print(buf[i], HEX);
+          SerialUSB.print(" ");
+      }
+      SerialUSB.println();
       debug_sensor_data(buf, len);
       SerialUSB.print(" RSSI: ");
       SerialUSB.print(rf95.lastRssi(), DEC);
