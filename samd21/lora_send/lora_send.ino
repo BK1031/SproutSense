@@ -61,44 +61,29 @@ void setup()
 
 void loop()
 {
-  uint8_t received_data[16];  // Buffer for sensor data (Module ID + 14 bytes)
+  uint8_t received_data[RH_RF95_MAX_MESSAGE_LEN];  // Buffer for received data
   int index = 0;
 
   // Check if STM32 has sent data
   if (Serial1.available()) {
-      while (Serial1.available() && index < sizeof(received_data)) {
+      // Read all available bytes
+      while (Serial1.available() && index < RH_RF95_MAX_MESSAGE_LEN) {
           received_data[index++] = Serial1.read();
       }
 
-      if (index == sizeof(received_data)) { // Ensure full packet received
-
-          debug_sensor_data(received_data, sizeof(received_data));
+      if (index > 0) { // If we received any data
+          // If data is sensor data format, debug it
+          if (index == 16) {
+              debug_sensor_data(received_data, 16);
+          }
 
           // Send the received binary data over LoRa
-          rf95.send(received_data, sizeof(received_data));
+          rf95.send(received_data, index);
           rf95.waitPacketSent();
 
           SerialUSB.println("Data sent over LoRa!");
-
-          // Wait for reply
-          byte buf[RH_RF95_MAX_MESSAGE_LEN];
-          byte len = sizeof(buf);
-
-          if (rf95.waitAvailableTimeout(2000)) {
-              if (rf95.recv(buf, &len)) {
-                  SerialUSB.print("Got reply: ");
-                  SerialUSB.println((char*)buf);
-              } else {
-                  SerialUSB.println("Receive failed");
-              }
-          } else {
-              SerialUSB.println("No reply, is the receiver running?");
-          }
-      } else {
-          SerialUSB.println("Error: Incomplete data received");
       }
   }
-
   delay(500);
 }
 
