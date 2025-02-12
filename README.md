@@ -4,6 +4,12 @@ SproutSense is a network of smart sensors designed to provide farmers with real-
 
 ## Getting Started
 
+First, start the required services defined in the provided Docker Compose file.
+
+```
+docker compose up
+```
+
 ## Architecture
 
 The project consists of a series of services spanning the hardware/software stack.
