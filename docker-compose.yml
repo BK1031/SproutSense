@@ -1,0 +1,23 @@
+name: sprout_sense
+
+services:
+  db:
+    image: postgres:17-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: sprout_sense
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+
+  nanomq:
+    image: emqx/nanomq:latest
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "8883:8883"
+
+volumes:
+  pgdata:
