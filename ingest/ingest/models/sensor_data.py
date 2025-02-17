@@ -8,4 +8,6 @@ class SensorData(db.Model):
     potassium = db.Column(db.Integer, nullable=False)
     humidity = db.Column(db.Integer, nullable=False)
     soilmoisture = db.Column(db.Integer, nullable=False)
+    temperature = db.Column(db.Integer, nullable=True, default=0)
+    sensormoduleid = db.Column(db.Integer, nullable=True)
     uv = db.Column(db.Integer, nullable=False)
