@@ -12,10 +12,13 @@ USERNAME = os.getenv('DB_USERNAME')
 PASSWORD = os.getenv('DB_PASSWORD')
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{USERNAME}:{PASSWORD}@localhost/ingest_db'
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://admin:password@localhost:5432/sprout_sense"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+from ingest.models.sensor_data import SensorData
+
 
 from ingest.routes import hello_bp, ingest_bp
 app.register_blueprint(hello_bp)

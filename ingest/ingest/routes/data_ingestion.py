@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from  .. import db
+from  .. import db, app
 from ..models.sensor_data import SensorData
 import struct
 
