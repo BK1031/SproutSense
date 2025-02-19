@@ -1,12 +1,12 @@
-from ingest.database.db import db
 from ingest.models.base import Base
+from sqlalchemy import Column, Integer, String, Float, DateTime
 
 class BaseStation(Base):
     __tablename__ = 'base_station'
     
-    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    name = db.Column(db.String, nullable=False)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    last_ping = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    name = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    last_ping = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False)

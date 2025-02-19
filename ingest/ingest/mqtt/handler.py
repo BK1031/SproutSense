@@ -1,3 +1,6 @@
+from ingest.service.sensor import save_humidity, save_temperature
+
+
 def handle_message(topic, payload):
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
     if len(payload) < 4:
@@ -13,6 +16,9 @@ def handle_message(topic, payload):
         lux_0 = int.from_bytes(payload[5:7], byteorder='big')
         lux_1 = int.from_bytes(payload[7:9], byteorder='big')
         
+        save_temperature(base_station_id, sensor_module_id, temperature)
+        save_humidity(base_station_id, sensor_module_id, humidity)
+
         print(f"Temperature: {temperature}°C")
         print(f"Humidity: {humidity}%") 
         print(f"Lux sensor 0: {lux_0}")
