@@ -16,7 +16,7 @@ const char *password = "pogchamp";
 const char* mqtt_server = "6.tcp.ngrok.io";
 const char* mqtt_username = "gr24"; // replace with your Username
 const char* mqtt_password = "gr24"; // replace with your Password
-const int mqtt_port = 17919;
+const int mqtt_port = 16315;
 
 #include <PubSubClient.h>
 
