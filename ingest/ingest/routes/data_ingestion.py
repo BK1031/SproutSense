@@ -8,6 +8,8 @@ import struct
 BYTE_ARRAY_CASES = {
     'case_1':{
         # i need to change the format since we are now also transmitting the case_id with it
+        # change this to get rid of base_station_id, this will get sent via the topic
+        # millis will be sent through the byte array, this will be sent with every byte array request
         'format': ">HHBBBHH",
         'sensor_data': ['base_station_id', 'module_id', 'case_id', 'temperature', 'humidity', 'lux_ch0', 'lux_ch1'],
         'size': struct.calcsize(">HHBBBHH")
