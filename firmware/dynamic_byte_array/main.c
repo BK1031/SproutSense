@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 
 #include "TSL2591.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -145,9 +147,15 @@ uint16_t MODULE_ID = 4;
 uint8_t sensor_data[14];  // Buffer to hold sensor data
 
 //for this case we need 4 bytes, temp/hum need one each, and uv is two byes
-uint8_t sensor_data_case_1[4];
-uint8_t sensor_data_case_2[6];
-uint8_t sensor_data_case_3[10];
+uint8_t CASE_1_IDENTIFIER = 1;
+uint8_t CASE_2_IDENTIFIER = 2;
+uint8_t CASE_3_IDENTIFIER = 3;
+uint8_t CASE_4_IDENTIFIER = 4;
+
+uint8_t sensor_data_case_1[8];
+uint8_t sensor_data_case_2[14];
+uint8_t sensor_data_case_3[18];
+uint8_t sensor_data_case_4[28];
 
 // Example sensor readings
 uint8_t temperature = 25;   // 25°C
@@ -190,10 +198,15 @@ float lux = 0;
 
 
 uint8_t gpsBuffer[GPS_BUFFER_SIZE];
+uint32_t latitude = 34419210;
+uint32_t longitude = 119865878;
+
+uint8_t north_or_south = 0; // 0 = North, 1 = South
+uint8_t east_or_west = 1;   // 0 = East, 1 = West
 
 
 
-int rtc_mins = 3;
+int rtc_mins = 2;
 
 
 /* USER CODE END PV */
@@ -343,6 +356,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			  current_sensor = 0;
 			  new_data_flags |= FLAG_N;
 			  currNTicks = 0;
+
+			  HAL_ADC_Start(&hadc1);
+
+			  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+
+			  adc_value = HAL_ADC_GetValue(&hadc1);
+			  voltage = (adc_value * 3.3f) / 4095.0f;
+
+			  soil_moisture = calculateSoilScore(voltage) * 100;
+
+			  sprintf(moisture,"Voltage: %.2f V, Soil Moisture Level: %.1f / 100\r\n", voltage, soil_moisture);
+			  HAL_UART_Transmit(&huart2, (uint8_t*)moisture, strlen(moisture), 1000);
+			  new_data_flags |= FLAG_SOIL;
 		  }
 
 		  ch0_data = read_tsl2591_data(&hi2c1, 0x14, 0x15);
@@ -355,9 +381,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		  new_data_flags |= FLAG_HUMIDITY;
 		  new_data_flags |= FLAG_UV;
 
-		  char message[50];
-	      snprintf(message, sizeof(message), "TEMP/HUMIDITY Data Ready\r\n");
-	      HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+
+//		  char message[50];
+//	      snprintf(message, sizeof(message), "TEMP/HUMIDITY Data Ready\r\n");
+//	      HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 
 //		  parseGNRMC((const char*)gpsBuffer);
 //		  HAL_UART_Transmit(&huart2, gpsBuffer, strlen((char*)gpsBuffer), 1000);
@@ -367,22 +394,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	    new_data_flags |= FLAG_P;
 	    new_data_flags |= FLAG_K;
-		HAL_ADC_Start(&hadc1);
 
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-
-		adc_value = HAL_ADC_GetValue(&hadc1);
-		voltage = (adc_value * 3.3f) / 4095.0f;
-
-		soil_moisture = calculateSoilScore(voltage) * 100;
-
-		sprintf(moisture,"Voltage: %.2f V, Soil Moisture Level: %.1f / 100\r\n", voltage, soil_moisture);
-		HAL_UART_Transmit(&huart2, (uint8_t*)moisture, strlen(moisture), 1000);
-
-
-	    char message[50];
-	    snprintf(message, sizeof(message), "NPK Interrupt\r\n");
-	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+//	    char message[50];
+//	    snprintf(message, sizeof(message), "NPK Interrupt\r\n");
+//	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 	}
 
 
@@ -393,42 +408,149 @@ void create_dynamic_sensor_payload_case(void) {
 		char message[50];
 	    snprintf(message, sizeof(message), "Case 1 Triggered\r\n");
 	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
-	    sensor_data_case_1[0] = temperature;
-	    sensor_data_case_1[1] = humidity;
-	    sensor_data_case_1[2] = (uv >> 8) & 0xFF;
-	    sensor_data_case_1[3] = uv & 0xFF;
-	}else if(new_data_flags == 0b00001111) {
+	    sensor_data_case_1[0] = CASE_1_IDENTIFIER;
+	    sensor_data_case_1[1] = temperature;
+	    sensor_data_case_1[2] = humidity;
+	    sensor_data_case_1[3] = (ch0_data >> 8) & 0xFF;
+	    sensor_data_case_1[4] = ch0_data & 0xFF;
+	    sensor_data_case_1[5] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_1[6] = ch1_data & 0xFF;
+		sensor_data_case_1[7] = 0xFF;
 
-	  	  char NPKData[100];
+		char buffer[50]; // Enough space to hold formatted output
+		int len = snprintf(buffer, sizeof(buffer),
+		                   "Data: %02X %02X %02X %02X %02X %02X %02X %02X\r\n",
+		                   sensor_data_case_1[0], sensor_data_case_1[1], sensor_data_case_1[2], sensor_data_case_1[3],
+		                   sensor_data_case_1[4], sensor_data_case_1[5], sensor_data_case_1[6], sensor_data_case_1[7]);
 
-	  	  sprintf(NPKData, "N: %d\r\n",
-	  				nitrogen_value);
-	  	HAL_UART_Transmit(&huart2, (uint8_t*)NPKData, strlen(NPKData), 1000);
-		sensor_data_case_2[0] = temperature;
-		sensor_data_case_2[1] = humidity;
-		sensor_data_case_2[2] = (uv >> 8) & 0xFF;
-		sensor_data_case_2[3] = uv & 0xFF;
-		sensor_data_case_2[4] = (nitrogen_value >> 8) & 0xFF;
-		sensor_data_case_2[5] = nitrogen_value & 0xFF;
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, 1000);
+//		HAL_UART_Transmit(&huart2, sensor_data_case_1, sizeof(sensor_data_case_1), 1000);
 
 
-	}else if(new_data_flags == 0b00111111) {
-		char NPKData[100];
-		sprintf(NPKData, "N: %d, P: %d, K: %d\r\n",
-							nitrogen_value,
-							phosphorus_value,
-							potassium_value);
-		HAL_UART_Transmit(&huart2, (uint8_t*)NPKData, strlen(NPKData), 1000);
-		sensor_data_case_3[0] = temperature;
-		sensor_data_case_3[1] = humidity;
-		sensor_data_case_3[2] = (uv >> 8) & 0xFF;
-		sensor_data_case_3[3] = uv & 0xFF;
-		sensor_data_case_3[4] = (nitrogen_value >> 8) & 0xFF;
-		sensor_data_case_3[5] = nitrogen_value & 0xFF;
-		sensor_data_case_3[6] = (phosphorus_value >> 8) & 0xFF;
-		sensor_data_case_3[7] = phosphorus_value & 0xFF;
-		sensor_data_case_3[8] = (potassium_value >> 8) & 0xFF;
-		sensor_data_case_3[9] = potassium_value & 0xFF;
+	}else if(new_data_flags == 0b01001111) {
+
+		char message[50];
+	    snprintf(message, sizeof(message), "Case 2 Triggered\r\n");
+	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+	  	sensor_data_case_2[0] = CASE_2_IDENTIFIER;
+		sensor_data_case_2[1] = temperature;
+		sensor_data_case_2[2] = humidity;
+//		sensor_data_case_2[3] = (uv >> 8) & 0xFF;
+//		sensor_data_case_2[4] = uv & 0xFF;
+		sensor_data_case_2[3] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_2[4] = ch0_data & 0xFF;
+		sensor_data_case_2[5] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_2[6] = ch1_data & 0xFF;
+		sensor_data_case_2[7] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_2[8] = nitrogen_value & 0xFF;
+		sensor_data_case_2[9] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_2[10] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_2[11] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_2[12] = adc_value & 0xFF;
+		sensor_data_case_2[13] = 0xFF;
+
+		char buffer[100];  // Sufficient space for formatted output
+		int len = snprintf(buffer, sizeof(buffer),
+		                   "Data: %02X %02X %02X %02X %02X %02X %02X %02X "
+		                   "%02X %02X %02X %02X %02X %02X\r\n",
+		                   sensor_data_case_2[0], sensor_data_case_2[1], sensor_data_case_2[2], sensor_data_case_2[3],
+		                   sensor_data_case_2[4], sensor_data_case_2[5], sensor_data_case_2[6], sensor_data_case_2[7],
+		                   sensor_data_case_2[8], sensor_data_case_2[9], sensor_data_case_2[10], sensor_data_case_2[11],
+		                   sensor_data_case_2[12], sensor_data_case_2[13]);
+
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, HAL_MAX_DELAY);
+
+
+
+
+
+	}else if(new_data_flags == 0b01111111) {
+		char message[50];
+	    snprintf(message, sizeof(message), "Case 3 Triggered\r\n");
+	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+
+		sensor_data_case_3[0] = CASE_3_IDENTIFIER;
+		sensor_data_case_3[1] = temperature;
+		sensor_data_case_3[2] = humidity;
+		sensor_data_case_3[3] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_3[4] = ch0_data & 0xFF;
+		sensor_data_case_3[5] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_3[6] = ch1_data & 0xFF;
+		sensor_data_case_3[7] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_3[8] = nitrogen_value & 0xFF;
+		sensor_data_case_3[9] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_3[10] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_3[11] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_3[12] = adc_value & 0xFF;
+		sensor_data_case_3[13] = (phosphorus_value >> 8) & 0xFF;
+		sensor_data_case_3[14] = phosphorus_value & 0xFF;
+		sensor_data_case_3[15] = (potassium_value >> 8) & 0xFF;
+		sensor_data_case_3[16] = potassium_value & 0xFF;
+		sensor_data_case_3[17] = 0xFF;
+
+
+		char buffer[150];  // Large enough for formatted output
+		int len = snprintf(buffer, sizeof(buffer),
+		                   "Data: %02X %02X %02X %02X %02X %02X %02X %02X "
+		                   "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\r\n",
+		                   sensor_data_case_3[0], sensor_data_case_3[1], sensor_data_case_3[2], sensor_data_case_3[3],
+		                   sensor_data_case_3[4], sensor_data_case_3[5], sensor_data_case_3[6], sensor_data_case_3[7],
+		                   sensor_data_case_3[8], sensor_data_case_3[9], sensor_data_case_3[10], sensor_data_case_3[11],
+		                   sensor_data_case_3[12], sensor_data_case_3[13], sensor_data_case_3[14], sensor_data_case_3[15],
+		                   sensor_data_case_3[16], sensor_data_case_3[17]);
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, HAL_MAX_DELAY);
+//		HAL_UART_Transmit(&huart2, sensor_data_case_3, sizeof(sensor_data_case_3), 1000);
+	}else if(new_data_flags == 0b11111111){
+
+		char message[50];
+	    snprintf(message, sizeof(message), "Case 4 Triggered\r\n");
+	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+
+		sensor_data_case_4[0] = CASE_4_IDENTIFIER;
+		sensor_data_case_4[1] = temperature;
+		sensor_data_case_4[2] = humidity;
+		sensor_data_case_4[3] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_4[4] = ch0_data & 0xFF;
+		sensor_data_case_4[5] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_4[6] = ch1_data & 0xFF;
+		sensor_data_case_4[7] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_4[8] = nitrogen_value & 0xFF;
+		sensor_data_case_4[9] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_4[10] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_4[11] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_4[12] = adc_value & 0xFF;
+		sensor_data_case_4[13] = (phosphorus_value >> 8) & 0xFF;
+		sensor_data_case_4[14] = phosphorus_value & 0xFF;
+		sensor_data_case_4[15] = (potassium_value >> 8) & 0xFF;
+		sensor_data_case_4[16] = potassium_value & 0xFF;
+		sensor_data_case_4[17] = (latitude >> 24) & 0xFF;
+		sensor_data_case_4[18] = (latitude >> 16) & 0xFF;
+		sensor_data_case_4[19] = (latitude >> 8) & 0xFF;
+		sensor_data_case_4[20] = latitude & 0xFF;
+		sensor_data_case_4[21] = north_or_south;
+		sensor_data_case_4[22] = (longitude >> 24) & 0xFF;
+		sensor_data_case_4[23] = (longitude >> 16) & 0xFF;
+		sensor_data_case_4[24] = (longitude >> 8) & 0xFF;
+		sensor_data_case_4[25] = longitude & 0xFF;
+		sensor_data_case_4[26] = east_or_west;
+		sensor_data_case_4[27] = 0xFF;
+
+
+		char buffer[200];
+		int len = snprintf(buffer, sizeof(buffer),
+		                   "Data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+		                   "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+		                   "%02X %02X %02X %02X %02X %02X\r\n",
+		                   sensor_data_case_4[0], sensor_data_case_4[1], sensor_data_case_4[2], sensor_data_case_4[3],
+		                   sensor_data_case_4[4], sensor_data_case_4[5], sensor_data_case_4[6], sensor_data_case_4[7],
+		                   sensor_data_case_4[8], sensor_data_case_4[9], sensor_data_case_4[10], sensor_data_case_4[11],
+		                   sensor_data_case_4[12], sensor_data_case_4[13], sensor_data_case_4[14], sensor_data_case_4[15],
+		                   sensor_data_case_4[16], sensor_data_case_4[17], sensor_data_case_4[18], sensor_data_case_4[19],
+		                   sensor_data_case_4[20], sensor_data_case_4[21], sensor_data_case_4[22], sensor_data_case_4[23],
+		                   sensor_data_case_4[24], sensor_data_case_4[25], sensor_data_case_4[26], sensor_data_case_4[27]);
+
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, len, HAL_MAX_DELAY);
+
 	}
 }
 
@@ -519,13 +641,22 @@ void uv_init(void){
 
 			}
 
-			if (TSL2591_SetIntegrationGain(&tslSensor, TSL2591_INTEGRATIONTIME_600MS, TSL2591_GAIN_MED) == HAL_OK) {
-				HAL_Delay(600);
+			if (TSL2591_SetIntegrationGain(&tslSensor, TSL2591_INTEGRATIONTIME_300MS, TSL2591_GAIN_MED) == HAL_OK) {
+				HAL_Delay(300);
 			}
 	  }
 }
 
 uint8_t TermiteBuffer[256];
+
+
+float convertGNRMCLatLonToDecimal(const char *coord){
+
+	float result = strtof(coord, NULL); // Convert string to float
+
+	return result;
+
+}
 
 
 void parseGNRMC(const char *nmeaBuffer) {
@@ -554,30 +685,67 @@ void parseGNRMC(const char *nmeaBuffer) {
             int lonDirIndex = i + 6; // Longitude direction
 
             // Extract latitude and longitude with their directions
-            const char *latitude = tokens[latIndex];
-            const char *latDirection = tokens[latDirIndex];
-            const char *longitude = tokens[lonIndex];
-            const char *lonDirection = tokens[lonDirIndex];
+            const char *latitude_char = tokens[latIndex];
+            const char *latDirection_char = tokens[latDirIndex];
+            const char *longitude_char = tokens[lonIndex];
+            const char *lonDirection_char = tokens[lonDirIndex];
 
-            // Use sprintf to format into TermiteBuffer
-            snprintf((char*)TermiteBuffer, sizeof(TermiteBuffer),
-                     "Lat: %s %s, Lon: %s %s\n",
-                     latitude, latDirection, longitude, lonDirection);
+            float latitude_float = convertGNRMCLatLonToDecimal(latitude_char);
+            float longitude_float = convertGNRMCLatLonToDecimal(longitude_char);
+
+            latitude = (uint32_t)(latitude_float * 10000);
+            longitude = (uint32_t)(longitude_float * 10000);
+
+            if(latDirection_char[0] == 'N'){
+            	north_or_south = 0;
+            }else{
+            	north_or_south = 1;
+            }
+
+
+            if(longitude_char[0] == 'E'){
+            	east_or_west = 0;
+            }else{
+            	east_or_west = 1;
+            }
+
+            snprintf(TermiteBuffer, sizeof(TermiteBuffer),
+                     "Lat: %lu, Dir: %u, Lon: %lu, Dir: %u\n",
+                     latitude, north_or_south, longitude, east_or_west);
 
             // Transmit via UART2
-            HAL_UART_Transmit(&huart2, TermiteBuffer, strlen((char*)TermiteBuffer), 1000);
+            HAL_UART_Transmit(&huart2, (uint8_t*)TermiteBuffer, strlen(TermiteBuffer), 1000);
+
+//
+//            snprintf(TermiteBuffer, sizeof(TermiteBuffer), "Lat: %lu, Lon: %lu\n", latitude, longitude);
+//            HAL_UART_Transmit(&huart2, (uint8_t*)TermiteBuffer, strlen(TermiteBuffer), 1000);
+//
+//            // Transmit via UART2
+//            HAL_UART_Transmit(&huart2, (uint8_t*)TermiteBuffer, strlen(TermiteBuffer), 1000);
+
+            // Use sprintf to format into TermiteBuffer
+//            snprintf((char*)TermiteBuffer, sizeof(TermiteBuffer),
+//                     "Lat: %s %s, Lon: %s %s\n",
+//					 latitude_char, latDirection_char, longitude_char, lonDirection_char);
+//
+//            // Transmit via UART2
+//            HAL_UART_Transmit(&huart2, TermiteBuffer, strlen((char*)TermiteBuffer), 1000);
 
             return; // Exit after processing the first $GNRMC sentence
         }
     }
 
     // If no $GNRMC sentence found
-    snprintf((char*)TermiteBuffer, sizeof(TermiteBuffer), "No $GNRMC sentence found.\n");
-    HAL_UART_Transmit(&huart2, TermiteBuffer, strlen((char*)TermiteBuffer), 1000);
+//    snprintf((char*)TermiteBuffer, sizeof(TermiteBuffer), "No $GNRMC sentence found.\n");
+//    HAL_UART_Transmit(&huart2, TermiteBuffer, strlen((char*)TermiteBuffer), 1000);
+
+    HAL_UART_Transmit(&huart2, TermiteBuffer, strlen((char*)gpsBuffer), 1000);
+
 }
 
 void gps_init(void){
-	HAL_UART_Transmit(&huart1, (uint8_t*)PMTK_RESET, strlen(PMTK_RESET), 1000);
+//	try transmitting this to a different uart, if doesnt work, switch the gps to use uart 3 and the npk will use uart1
+	HAL_UART_Transmit(&huart3, (uint8_t*)PMTK_RESET, strlen(PMTK_RESET), 1000);
     HAL_Delay(1000);
     HAL_UART_Transmit(&huart1, (uint8_t*)PMTK_SET_NMEA_OUTPUT_RMCONLY, strlen(PMTK_SET_NMEA_OUTPUT_RMCONLY), 1000);
     HAL_Delay(1000);
@@ -619,9 +787,10 @@ void Set_RTC_Alarm(int mins)
 }
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
-//	  parseGNRMC((const char*)gpsBuffer);
+	  parseGNRMC((const char*)gpsBuffer);
 //	  HAL_UART_Transmit(&huart2, gpsBuffer, strlen((char*)gpsBuffer), 1000);
-	  rtc_mins += 3;
+	  new_data_flags |= FLAG_GPS;
+	  rtc_mins += 2;
 	  Set_RTC_Alarm(rtc_mins);
 }
 
@@ -675,6 +844,9 @@ int main(void)
   uv_init();
   gps_init();
 
+  char message[50];
+  char NPKData[50];
+
 //  this clear is so that the interrupt does not fire on start up
   __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
   __HAL_TIM_CLEAR_IT(&htim5, TIM_IT_UPDATE);
@@ -693,15 +865,42 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+
 	  if(new_data_flags ==  0b00000111){
 		  create_dynamic_sensor_payload_case();
 		  publish_sensor_data(MODULE_ID, sensor_data_case_1, sizeof(sensor_data_case_1));
-	  }else if(new_data_flags == 0b00001111) {
+	  }else if(new_data_flags == 0b01001111) {
 		  NPK_ReadSensor_DMA();
 		  HAL_Delay(63);
+
+			sprintf(NPKData, "N: %d\r\n",
+					nitrogen_value);
+			HAL_UART_Transmit(&huart2, (uint8_t*)NPKData, strlen(NPKData), 1000);
 		  create_dynamic_sensor_payload_case();
 		  publish_sensor_data(MODULE_ID, sensor_data_case_2, sizeof(sensor_data_case_2));
-	  }else if(new_data_flags == 0b00111111){
+	  }else if(new_data_flags == 0b01111111){
+		  current_sensor = 0;
+		  NPK_ReadSensor_DMA();
+		  HAL_Delay(63);
+
+		  current_sensor = 1;
+		  Phosphorus_ReadSensor_DMA();
+		  HAL_Delay(63);
+
+		  current_sensor = 2;
+		  Potassium_ReadSensor_DMA();
+		  HAL_Delay(63);
+
+			sprintf(NPKData, "N: %d, P: %d, K: %d\r\n",
+					nitrogen_value,
+					phosphorus_value,
+					potassium_value);
+			HAL_UART_Transmit(&huart2, (uint8_t*)NPKData, strlen(NPKData), 1000);
+
+		  create_dynamic_sensor_payload_case();
+		  publish_sensor_data(MODULE_ID, sensor_data_case_3, sizeof(sensor_data_case_3));
+
+	  }else if(new_data_flags == 0b11111111){
 		  current_sensor = 0;
 		  NPK_ReadSensor_DMA();
 		  HAL_Delay(63);
@@ -715,7 +914,19 @@ int main(void)
 		  HAL_Delay(63);
 
 		  create_dynamic_sensor_payload_case();
-		  publish_sensor_data(MODULE_ID, sensor_data_case_3, sizeof(sensor_data_case_3));
+		  publish_sensor_data(MODULE_ID, sensor_data_case_4, sizeof(sensor_data_case_4));
+
+
+	  }else{
+		  snprintf(message, sizeof(message), "CPU is going to sleep\r\n");
+		  HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+
+		  HAL_SuspendTick();
+
+
+		  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+
+		  HAL_ResumeTick();
 
 	  }
 
