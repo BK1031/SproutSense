@@ -13,10 +13,10 @@ const char *ssid = "BK1031 iPhone";
 const char *password = "pogchamp"; 
 
 // mqtt details
-const char* mqtt_server = "6.tcp.ngrok.io";
-const char* mqtt_username = "gr24"; // replace with your Username
-const char* mqtt_password = "gr24"; // replace with your Password
-const int mqtt_port = 16315;
+const char* mqtt_server = "hamilton-ec2.gauchoracing.com";
+const char* mqtt_username = "base_station"; // replace with your Username
+const char* mqtt_password = "base_station"; // replace with your Password
+const int mqtt_port = 1338;
 
 #include <PubSubClient.h>
 
@@ -45,9 +45,9 @@ void send() {
     uint8_t* message = new uint8_t[bufferIndex];
     memcpy(message, loraBuffer, bufferIndex);
     mqtt.publish(("ingest/" + String(bsid)).c_str(), message, bufferIndex);
-    // Extract sid (first 2 bytes) and message id (3rd byte)
-    uint16_t sid = (message[0] << 8) | message[1];
-    uint8_t messageId = message[2];
+    // Extract message id (first byte) and sid (next 2 bytes)
+    uint8_t messageId = message[0];
+    uint16_t sid = (message[1] << 8) | message[2];
     
     Serial.print("Forwarded message 0x0");
     Serial.print(messageId);
@@ -74,7 +74,7 @@ void connectWifi() {
 void reconnect() {
     connectWifi();
     while (!mqtt.connected()) {
-        if (mqtt.connect(String(bsid).c_str(), mqtt_username, mqtt_password)) {
+        if (mqtt.connect(("base_station_" + String(bsid)).c_str(), mqtt_username, mqtt_password)) {
             Serial.println("connected to mqtt!");
         } else {
             Serial.print("failed, rc = ");

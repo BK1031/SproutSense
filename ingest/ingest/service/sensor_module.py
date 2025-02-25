@@ -2,6 +2,14 @@ import datetime
 from ingest.models.sensor_module import SensorModule
 from ingest.database.db import get_db
 
+def create_sensor_module_if_not_exists(id: int) -> SensorModule:
+    """Create a new sensor module if it doesn't exist"""
+    db = get_db()
+    sensor_module = db.query(SensorModule).filter(SensorModule.id == id).first()
+    if not sensor_module:
+        create_sensor_module(id, f"Sensor Module {id}")
+    return sensor_module
+
 def create_sensor_module(id: int, name: str) -> SensorModule:
     """Create a new sensor module"""
     db = get_db()

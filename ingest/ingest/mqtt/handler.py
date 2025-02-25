@@ -1,87 +1,92 @@
-from ingest.service.sensor import save_humidity, save_temperature
-
+from datetime import datetime
+from ingest.ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
+from ingest.ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
+from ingest.service.sensor import save_humidity, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
 
 def handle_message(topic, payload):
+    print('--------------------------------')
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
     if len(payload) < 4:
         print(f"Message not at least 4 bytes")
         return
     base_station_id = int(topic.split("/")[1])
-    sensor_module_id = payload[0:2]
-    message_id = int(payload[2])
-    print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}")
-    if message_id == 1:
-        temperature = payload[3]
-        humidity = payload[4]
-        lux_0 = int.from_bytes(payload[5:7], byteorder='big')
-        lux_1 = int.from_bytes(payload[7:9], byteorder='big')
-        
-        save_temperature(base_station_id, sensor_module_id, temperature)
-        save_humidity(base_station_id, sensor_module_id, humidity)
+    message_id = int(payload[0])
+    sensor_module_id = int.from_bytes(payload[1:3], byteorder='big')
+    millis = int.from_bytes(payload[3:7], byteorder='big')
 
-        print(f"Temperature: {temperature}°C")
-        print(f"Humidity: {humidity}%") 
-        print(f"Lux sensor 0: {lux_0}")
-        print(f"Lux sensor 1: {lux_1}")
+    if check_duplicate_message(sensor_module_id, millis):
+        print(f"Duplicate message detected (skipping) Sensor Module ID: {sensor_module_id}, Millis: {millis}")
+        return
+    
+    create_base_station_if_not_exists(base_station_id)
+    create_sensor_module_if_not_exists(sensor_module_id)
+    update_base_station_ping(base_station_id)
+    update_sensor_module_ping(sensor_module_id)
+
+    print('')
+    print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
+    if message_id == 1:
+        temperature = int.from_bytes(payload[7:8], byteorder='big')
+        humidity = int.from_bytes(payload[8:9], byteorder='big')
+        lux_0 = int.from_bytes(payload[9:11], byteorder='big')
+        lux_1 = int.from_bytes(payload[11:13], byteorder='big')
+        
+        save_temperature(base_station_id, sensor_module_id, temperature, millis)
+        save_humidity(base_station_id, sensor_module_id, humidity, millis)
+        save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
+
     elif message_id == 2:
-        temperature = payload[3]
-        humidity = payload[4]
-        lux_0 = int.from_bytes(payload[5:7], byteorder='big')
-        lux_1 = int.from_bytes(payload[7:9], byteorder='big')
-        nitrogen = int.from_bytes(payload[9:11], byteorder='big')
-        soil_moisture = int.from_bytes(payload[11:15], byteorder='big')
-        
-        print(f"Temperature: {temperature}°C")
-        print(f"Humidity: {humidity}%")
-        print(f"Lux sensor 0: {lux_0}")
-        print(f"Lux sensor 1: {lux_1}")
-        print(f"Nitrogen: {nitrogen}")
-        print(f"Soil moisture: {soil_moisture}")
+        temperature = int.from_bytes(payload[7:8], byteorder='big')
+        humidity = int.from_bytes(payload[8:9], byteorder='big')
+        lux_0 = int.from_bytes(payload[9:11], byteorder='big')
+        lux_1 = int.from_bytes(payload[11:13], byteorder='big')
+        nitrogen = int.from_bytes(payload[13:15], byteorder='big')
+        soil_moisture = int.from_bytes(payload[15:19], byteorder='big')
+
+        save_temperature(base_station_id, sensor_module_id, temperature, millis)
+        save_humidity(base_station_id, sensor_module_id, humidity, millis)
+        save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
+        save_nitrogen(base_station_id, sensor_module_id, nitrogen, millis)
+        save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
+    
     elif message_id == 3:
-        temperature = payload[3]
-        humidity = payload[4]
-        lux_0 = int.from_bytes(payload[5:7], byteorder='big')
-        lux_1 = int.from_bytes(payload[7:9], byteorder='big')
-        nitrogen = int.from_bytes(payload[9:11], byteorder='big')
-        soil_moisture = int.from_bytes(payload[11:15], byteorder='big')
-        phosphorous = int.from_bytes(payload[15:17], byteorder='big')
-        potassium = int.from_bytes(payload[17:19], byteorder='big')
-        
-        print(f"Temperature: {temperature}°C")
-        print(f"Humidity: {humidity}%")
-        print(f"Lux sensor 0: {lux_0}")
-        print(f"Lux sensor 1: {lux_1}")
-        print(f"Nitrogen: {nitrogen}")
-        print(f"Soil moisture: {soil_moisture}")
-        print(f"Phosphorous: {phosphorous}")
-        print(f"Potassium: {potassium}")
+        temperature = int.from_bytes(payload[7:8], byteorder='big')
+        humidity = int.from_bytes(payload[8:9], byteorder='big')
+        lux_0 = int.from_bytes(payload[9:11], byteorder='big')
+        lux_1 = int.from_bytes(payload[11:13], byteorder='big')
+        nitrogen = int.from_bytes(payload[13:15], byteorder='big')
+        soil_moisture = int.from_bytes(payload[15:19], byteorder='big')
+
+        save_temperature(base_station_id, sensor_module_id, temperature, millis)
+        save_humidity(base_station_id, sensor_module_id, humidity, millis)
+        save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
+        save_nitrogen(base_station_id, sensor_module_id, nitrogen, millis)
+        save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
+    
     elif message_id == 4:
-        temperature = payload[3]
-        humidity = payload[4]
-        lux_0 = int.from_bytes(payload[5:7], byteorder='big')
-        lux_1 = int.from_bytes(payload[7:9], byteorder='big')
-        nitrogen = int.from_bytes(payload[9:11], byteorder='big')
-        soil_moisture = int.from_bytes(payload[11:15], byteorder='big')
-        phosphorous = int.from_bytes(payload[15:17], byteorder='big')
-        potassium = int.from_bytes(payload[17:19], byteorder='big')
+        temperature = int.from_bytes(payload[7:8], byteorder='big')
+        humidity = int.from_bytes(payload[8:9], byteorder='big')
+        lux_0 = int.from_bytes(payload[9:11], byteorder='big')
+        lux_1 = int.from_bytes(payload[11:13], byteorder='big')
+        nitrogen = int.from_bytes(payload[13:15], byteorder='big')
+        soil_moisture = int.from_bytes(payload[15:19], byteorder='big')
+        phosphorus = int.from_bytes(payload[19:21], byteorder='big')
+        potassium = int.from_bytes(payload[21:23], byteorder='big')
+
+        save_temperature(base_station_id, sensor_module_id, temperature, millis)
+        save_humidity(base_station_id, sensor_module_id, humidity, millis)
+        save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
+        save_nitrogen(base_station_id, sensor_module_id, nitrogen, millis)
+        save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
+        save_phosphorus(base_station_id, sensor_module_id, phosphorus, millis)
+        save_potassium(base_station_id, sensor_module_id, potassium, millis)
         
-        print(f"Temperature: {temperature}°C")
-        print(f"Humidity: {humidity}%")
-        print(f"Lux sensor 0: {lux_0}")
-        print(f"Lux sensor 1: {lux_1}")
-        print(f"Nitrogen: {nitrogen}")
-        print(f"Soil moisture: {soil_moisture}")
-        print(f"Phosphorous: {phosphorous}")
-        print(f"Potassium: {potassium}")
     else:
         print(f"Unknown message ID: {message_id}")
 
-# def save_sensor_data(base_station_id, sensor_module_id, sensor_name, data):
-#     model = Sensor()
-#     model.bsid = base_station_id
-#     model.smid = sensor_module_id
-#     model.name = sensor_name
-#     model.value = data
-#     model.created_at = datetime.datetime.now()
-#     db_session.add(model)
-#     db_session.commit()
+def check_duplicate_message(sensor_module_id, millis) -> bool:
+    sensor_data = get_sensor_data_by_smid_and_millis(sensor_module_id, millis)
+    if sensor_data:
+        if sensor_data.created_at.timestamp() > datetime.now().timestamp() - 5:
+            return True
+    return False

@@ -2,6 +2,14 @@ import datetime
 from ingest.models.base_station import BaseStation
 from ingest.database.db import get_db
 
+def create_base_station_if_not_exists(id: int) -> BaseStation:
+    """Create a new base station if it doesn't exist"""
+    db = get_db()
+    base_station = db.query(BaseStation).filter(BaseStation.id == id).first()
+    if not base_station:
+        create_base_station(id, f"Base Station {id}")
+    return base_station
+
 def create_base_station(id: int, name: str) -> BaseStation:
     """Create a new base station"""
     db = get_db()
