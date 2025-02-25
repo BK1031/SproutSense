@@ -1,6 +1,6 @@
 from datetime import datetime
-from ingest.ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
-from ingest.ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
+from ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
+from ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
 from ingest.service.sensor import save_humidity, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
 
 def handle_message(topic, payload):
