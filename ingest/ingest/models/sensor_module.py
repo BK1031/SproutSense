@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
 from ingest.models.base import Base
+from sqlalchemy import Column, Integer, String, Float, DateTime
 
 class SensorModule(Base):
     __tablename__ = 'sensor_module'

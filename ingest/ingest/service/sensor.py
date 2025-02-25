@@ -22,3 +22,27 @@ def save_sensor_data(bsid, smid, name, value):
     model.created_at = datetime.datetime.now()
     db_session.add(model)
     db_session.commit()
+
+def get_sensor_data_by_id(id: int) -> Sensor:
+    """Get sensor data by ID"""
+    return db_session.query(Sensor).filter(Sensor.id == id).first()
+
+def get_sensor_data_by_smid_and_millis(smid: int, millis: int) -> Sensor:
+    """Get sensor data by sensor module ID and millisecond timestamp"""
+    return db_session.query(Sensor).filter(Sensor.smid == smid, Sensor.millis == millis).order_by(Sensor.created_at.desc()).first()
+
+def get_sensor_data_by_bsid_and_smid(bsid: int, smid: int) -> list[Sensor]:
+    """Get sensor data by base station ID and sensor module ID"""
+    return db_session.query(Sensor).filter(Sensor.bsid == bsid, Sensor.smid == smid).all()
+
+def get_sensor_data_by_bsid(bsid: int) -> list[Sensor]:
+    """Get sensor data by base station ID"""
+    return db_session.query(Sensor).filter(Sensor.bsid == bsid).all()
+
+def get_sensor_data_by_smid(smid: int) -> list[Sensor]:
+    """Get sensor data by sensor module ID"""
+    return db_session.query(Sensor).filter(Sensor.smid == smid).all()
+
+def get_all_sensor_data() -> list[Sensor]:
+    """Get all sensor data"""
+    return db_session.query(Sensor).all()

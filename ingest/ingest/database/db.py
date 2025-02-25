@@ -8,6 +8,8 @@ from ingest.config.config import (
     DATABASE_NAME
 )
 from ingest.models.base import Base
+from ingest.models import base_station, sensor, sensor_module
+
 DATABASE_URL = f"postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 
 db_session = None
@@ -38,6 +40,12 @@ def init_db():
         # Create all tables
         Base.metadata.create_all(bind=engine)
         print("Database initialized")
+
+def get_db():
+    """Get the database session"""
+    if not db_session:
+        raise ValueError("Database session is not initialized")
+    return db_session
         
 def shutdown_session(exception=None):
     """Remove the session at the end of request"""
