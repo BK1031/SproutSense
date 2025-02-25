@@ -9,4 +9,5 @@ class Sensor(Base):
     smid = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
     value = Column(Float, nullable=False)
+    millis = Column(Integer, nullable=False)
     created_at = Column(DateTime, nullable=False)
