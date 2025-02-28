@@ -6,7 +6,8 @@
 #define SerialMon Serial  //for USB communication 
 #define SerialLora Serial1 //for communication with the LoRa module
 
-const int bsid = 1;
+const int bsid = 2;
+int ticks = 0;
 
 // wifi details
 const char *ssid = "BK1031 iPhone"; 
@@ -32,13 +33,30 @@ bool has_data = false;
 #define MESSAGE_END 0xFF
 #define MIN_MESSAGE_LENGTH 4
 
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 void resetBuffer() {
     for (int i = 0; i < BUFFER_SIZE; i++) {
         loraBuffer[i] = 0;
     }
     bufferIndex = 0;
+}
+
+unsigned long lastCheckTime = 0;
+unsigned long byteCount = 0;
+float avgBPS = 0;
+
+void updateRollingBPS() {
+    const unsigned long CHECK_INTERVAL = 1000; // Check every second
+    unsigned long currentTime = millis();
+    float elapsedTime = (currentTime - lastCheckTime) / 1000.0;
+
+    if (elapsedTime >= (CHECK_INTERVAL / 1000.0)) {
+        float currentBPS = byteCount / elapsedTime;
+        avgBPS = (0.2 * avgBPS) + (0.8 * currentBPS);
+        byteCount = 0;
+        lastCheckTime = currentTime;
+    }
 }
 
 void send() {
@@ -96,7 +114,9 @@ void setup() {
     mqtt.setBufferSize(1024);
 }
 
-void loop() {     
+void loop() {
+    ticks++;
+
     if (!esp32.connected()) {
         Serial.println(WiFi.status());
         reconnect();
@@ -104,13 +124,14 @@ void loop() {
 
     while (Serial.available() && bufferIndex < BUFFER_SIZE) {
         uint8_t incoming = Serial.read();
+        byteCount++;
         
-        // Only store if it's not our termination character
-        if (incoming != MESSAGE_END) {
-            loraBuffer[bufferIndex] = incoming;
-            bufferIndex++;
-        } else if (bufferIndex >= MIN_MESSAGE_LENGTH) {
-            // We got a termination character and have enough data
+        // Store the character
+        loraBuffer[bufferIndex] = incoming;
+        bufferIndex++;
+        
+        // Check if we got the end character and have enough data
+        if (incoming == MESSAGE_END && bufferIndex >= MIN_MESSAGE_LENGTH) {
             has_data = true;
             break;
         }
@@ -136,7 +157,12 @@ void loop() {
         has_data = false;
         resetBuffer();
     }
-    
-    delay(10);
+
+    updateRollingBPS();
+    if (ticks % 1000 == 0) {
+        Serial.print("Average BPS: ");
+        Serial.println(avgBPS);
+    }
+
     mqtt.loop();   
 }
