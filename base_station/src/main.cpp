@@ -7,7 +7,6 @@
 #define SerialLora Serial1 //for communication with the LoRa module
 
 const int bsid = 2;
-int ticks = 0;
 
 // wifi details
 const char *ssid = "BK1031 iPhone"; 
@@ -31,9 +30,32 @@ int bufferIndex = 0;
 bool has_data = false;
 
 #define MESSAGE_END 0xFF
-#define MIN_MESSAGE_LENGTH 4
+#define MIN_MESSAGE_LENGTH 8
 
 #define DEBUG_MODE true
+
+#include <time.h>
+
+// Add these constants after other const declarations
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = -28800;  // PST offset (-8 hours * 3600 seconds)
+const int   daylightOffset_sec = 3600;  // 1 hour DST offset
+
+void printLocalTime() {
+    struct tm timeinfo;
+    struct timeval tv;
+    if(!getLocalTime(&timeinfo)){
+        Serial.println("Failed to obtain time");
+        return;
+    }
+    gettimeofday(&tv, NULL);
+    
+    // Print the main time components
+    Serial.print(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    // Print milliseconds
+    Serial.printf(".%03d", (tv.tv_usec / 1000));
+    Serial.println();
+}
 
 void resetBuffer() {
     for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -45,6 +67,8 @@ void resetBuffer() {
 unsigned long lastCheckTime = 0;
 unsigned long byteCount = 0;
 float avgBPS = 0;
+
+unsigned long lastPrintTime = 0;  // Add this with other global variables
 
 void updateRollingBPS() {
     const unsigned long CHECK_INTERVAL = 1000; // Check every second
@@ -66,14 +90,6 @@ void send() {
     // Extract message id (first byte) and sid (next 2 bytes)
     uint8_t messageId = message[0];
     uint16_t sid = (message[1] << 8) | message[2];
-    
-    Serial.print("Forwarded message 0x0");
-    Serial.print(messageId);
-    Serial.print(" from sensor module ");
-    Serial.print(sid);
-    Serial.print(" (");
-    Serial.print(bufferIndex);
-    Serial.println(" bytes)");
 
     delete[] message;
 }
@@ -112,11 +128,20 @@ void setup() {
     mqtt.setServer(mqtt_server, mqtt_port);
     mqtt.setKeepAlive(5);
     mqtt.setBufferSize(1024);
+    
+    // Configure NTP
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    
+    // Wait for time to be set
+    Serial.println("Waiting for NTP time sync...");
+    while (time(nullptr) < 1000000000) {
+        Serial.print(".");
+        delay(100);
+    }
+    Serial.println("\nTime synchronized!");
 }
 
 void loop() {
-    ticks++;
-
     if (!esp32.connected()) {
         Serial.println(WiFi.status());
         reconnect();
@@ -138,31 +163,20 @@ void loop() {
     }
 
     if (has_data) {
-        if (DEBUG_MODE) {
-            Serial.print("Received ");
-            Serial.print(bufferIndex);
-            Serial.println(" bytes!");
-            for (int i = 0; i < bufferIndex; i++) {
-                Serial.print("0x");
-                if (loraBuffer[i] < 0x10) {
-                    Serial.print("0");
-                }
-                Serial.print(loraBuffer[i], HEX);
-                Serial.print(" ");
-            }
-            Serial.println();
-        }
-
         send();
         has_data = false;
         resetBuffer();
     }
 
     updateRollingBPS();
-    if (ticks % 1000 == 0) {
-        Serial.print("Average BPS: ");
-        Serial.println(avgBPS);
+    
+    if (millis() - lastPrintTime >= 5000) {
+        lastPrintTime = millis();
+
+        char bps_str[16];
+        snprintf(bps_str, sizeof(bps_str), "Avg BPS: %.2f", avgBPS);
+        mqtt.publish(("ingest/" + String(bsid)).c_str() + "/bps", bps_str, strlen(bps_str));
     }
 
-    mqtt.loop();   
+    mqtt.loop();
 }
