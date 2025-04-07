@@ -1,5 +1,5 @@
 import datetime
-from ingest.models.stress import StressTest
+from ingest.models.stress_test import StressTest
 from ingest.database.db import get_db
 
 def save_stress_test(bsid: int, smid: int, generated_at: int, sent_at: int):

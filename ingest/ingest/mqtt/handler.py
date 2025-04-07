@@ -7,9 +7,22 @@ from ingest.service.stress_test import save_stress_test
 def handle_message(topic, payload):
     print('--------------------------------')
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
+
+    if len(topic.split("/")) == 3:
+        base_station_id = int(topic.split("/")[1])
+        msg = topic.split("/")[2]
+        if msg == "bps":
+            print(f"Base Station ${base_station_id}: " + payload.decode('utf-8'))
+            return
+        
+    if len(topic.split("/")) != 2:
+        print(f"Invalid topic: {topic}")
+        return
+
     if len(payload) < 4:
         print(f"Message not at least 4 bytes")
         return
+    
     base_station_id = int(topic.split("/")[1])
     message_id = int(payload[0])
     sensor_module_id = int.from_bytes(payload[1:3], byteorder='big')
@@ -83,10 +96,9 @@ def handle_message(topic, payload):
         save_potassium(base_station_id, sensor_module_id, potassium, millis)
         
     elif message_id == 6:
-        generated_at = int.from_bytes(payload[7:11], byteorder='big')
-        sent_at = int.from_bytes(payload[11:15], byteorder='big')
-        print(f"Message generated at: {generated_at}, sent at: {sent_at}, latency: {sent_at - generated_at}")
-        save_stress_test(base_station_id, sensor_module_id, generated_at, sent_at)
+        sent_at = int.from_bytes(payload[7:11], byteorder='big')
+        print(f"Message generated at: {millis}, sent at: {sent_at}, latency: {sent_at - millis}")
+        save_stress_test(base_station_id, sensor_module_id, millis, sent_at)
         
     else:
         print(f"Unknown message ID: {message_id}")
