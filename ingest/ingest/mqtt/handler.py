@@ -7,13 +7,6 @@ from ingest.service.stress_test import save_stress_test
 def handle_message(topic, payload):
     print('--------------------------------')
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
-
-    if len(topic.split("/")) == 3:
-        base_station_id = int(topic.split("/")[1])
-        msg = topic.split("/")[2]
-        if msg == "bps":
-            print(f"Base Station ${base_station_id}: " + payload.decode('utf-8'))
-            return
         
     if len(topic.split("/")) != 2:
         print(f"Invalid topic: {topic}")
@@ -109,3 +102,9 @@ def check_duplicate_message(sensor_module_id, millis) -> bool:
         if sensor_data.created_at.timestamp() > datetime.now().timestamp() - 5:
             return True
     return False
+
+def handle_base_station_bps(topic, payload):
+    base_station_id = int(topic.split("/")[1])
+    bps = float(payload.decode('utf-8').split(": ")[1])
+    print(f"Base Station {base_station_id}: {bps} bps")
+    return

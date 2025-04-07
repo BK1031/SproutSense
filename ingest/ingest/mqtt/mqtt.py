@@ -1,13 +1,14 @@
 import random
 import paho.mqtt.client as mqtt
 from ingest.config.config import MQTT_HOST, MQTT_PORT
-from ingest.mqtt.handler import handle_message
+from ingest.mqtt.handler import handle_base_station_bps, handle_message
 
 def init_mqtt():
     client_id = generate_client_id()
     mqtt_client = MQTTClient(client_id=client_id)
     mqtt_client.connect()
     mqtt_client.subscribe("ingest/+", handle_message)
+    mqtt_client.subscribe("ingest/+/bps", handle_base_station_bps)
 
 def generate_client_id():
     return f"ingest-{random.randint(100000, 999999)}"
