@@ -175,7 +175,7 @@ void loop() {
 
         char bps_str[16];
         snprintf(bps_str, sizeof(bps_str), "Avg BPS: %.2f", avgBPS);
-        mqtt.publish(("ingest/" + String(bsid)).c_str() + "/bps", bps_str, strlen(bps_str));
+        mqtt.publish(("ingest/" + String(bsid) + "/bps").c_str(), bps_str, strlen(bps_str));
     }
 
     mqtt.loop();
