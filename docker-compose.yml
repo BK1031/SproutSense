@@ -17,7 +17,7 @@ services:
     image: emqx/nanomq:latest
     restart: unless-stopped
     ports:
-      - "1883:1883"
+      - "1338:1883"
       - "8083:8083"
       - "8883:8883"
 
