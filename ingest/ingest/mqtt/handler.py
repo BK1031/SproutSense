@@ -1,7 +1,7 @@
 from datetime import datetime
 from ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
 from ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
-from ingest.service.sensor import save_humidity, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
+from ingest.service.sensor import save_humidity, save_latitude, save_longitude, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
 from ingest.service.stress_test import save_stress_test
 
 def handle_message(topic, payload):
@@ -33,6 +33,10 @@ def handle_message(topic, payload):
     print('')
     print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
     if message_id == 1:
+        if len(payload) < 13:
+            print(f"Message 1 not at least 13 bytes")
+            return
+        
         temperature = int.from_bytes(payload[7:8], byteorder='big')
         humidity = int.from_bytes(payload[8:9], byteorder='big')
         lux_0 = int.from_bytes(payload[9:11], byteorder='big')
@@ -43,6 +47,10 @@ def handle_message(topic, payload):
         save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
 
     elif message_id == 2:
+        if len(payload) < 19:
+            print(f"Message 2 not at least 15 bytes")
+            return
+        
         temperature = int.from_bytes(payload[7:8], byteorder='big')
         humidity = int.from_bytes(payload[8:9], byteorder='big')
         lux_0 = int.from_bytes(payload[9:11], byteorder='big')
@@ -57,6 +65,10 @@ def handle_message(topic, payload):
         save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
     
     elif message_id == 3:
+        if len(payload) < 23:
+            print(f"Message 3 not at least 23 bytes")
+            return
+        
         temperature = int.from_bytes(payload[7:8], byteorder='big')
         humidity = int.from_bytes(payload[8:9], byteorder='big')
         lux_0 = int.from_bytes(payload[9:11], byteorder='big')
@@ -71,6 +83,10 @@ def handle_message(topic, payload):
         save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
     
     elif message_id == 4:
+        if len(payload) < 33:
+            print(f"Message 4 not at least 33 bytes")
+            return
+        
         temperature = int.from_bytes(payload[7:8], byteorder='big')
         humidity = int.from_bytes(payload[8:9], byteorder='big')
         lux_0 = int.from_bytes(payload[9:11], byteorder='big')
@@ -79,6 +95,10 @@ def handle_message(topic, payload):
         soil_moisture = int.from_bytes(payload[15:19], byteorder='big')
         phosphorus = int.from_bytes(payload[19:21], byteorder='big')
         potassium = int.from_bytes(payload[21:23], byteorder='big')
+        latitude = int.from_bytes(payload[23:27], byteorder='big')
+        lat_dir = int.from_bytes(payload[27:28], byteorder='big')
+        longitude = int.from_bytes(payload[28:32], byteorder='big')
+        lon_dir = int.from_bytes(payload[32:33], byteorder='big')
 
         save_temperature(base_station_id, sensor_module_id, temperature, millis)
         save_humidity(base_station_id, sensor_module_id, humidity, millis)
@@ -87,6 +107,8 @@ def handle_message(topic, payload):
         save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
         save_phosphorus(base_station_id, sensor_module_id, phosphorus, millis)
         save_potassium(base_station_id, sensor_module_id, potassium, millis)
+        save_latitude(base_station_id, sensor_module_id, latitude, lat_dir, millis)
+        save_longitude(base_station_id, sensor_module_id, longitude, lon_dir, millis)
         
     elif message_id == 6:
         sent_at = int.from_bytes(payload[7:11], byteorder='big')
@@ -107,4 +129,11 @@ def handle_base_station_bps(topic, payload):
     base_station_id = int(topic.split("/")[1])
     bps = float(payload.decode('utf-8').split(": ")[1])
     print(f"Base Station {base_station_id}: {bps} bps")
+    create_base_station_if_not_exists(base_station_id)
+    update_base_station_ping(base_station_id)
+    return
+
+def handle_base_station_debug(topic, payload):
+    base_station_id = int(topic.split("/")[1])
+    print(f"Base Station {base_station_id} Debug: 0x{payload.hex(' ', 1)}")
     return

@@ -154,6 +154,9 @@ void loop() {
         // Store the character
         loraBuffer[bufferIndex] = incoming;
         bufferIndex++;
+
+        // Send raw byte
+        mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
         
         // Check if we got the end character and have enough data
         if (incoming == MESSAGE_END && bufferIndex >= MIN_MESSAGE_LENGTH) {

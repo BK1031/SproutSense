@@ -1,7 +1,7 @@
 import random
 import paho.mqtt.client as mqtt
 from ingest.config.config import MQTT_HOST, MQTT_PORT
-from ingest.mqtt.handler import handle_base_station_bps, handle_message
+from ingest.mqtt.handler import handle_base_station_bps, handle_base_station_debug, handle_message
 
 def init_mqtt():
     client_id = generate_client_id()
@@ -9,6 +9,7 @@ def init_mqtt():
     mqtt_client.connect()
     mqtt_client.subscribe("ingest/+", handle_message)
     mqtt_client.subscribe("ingest/+/bps", handle_base_station_bps)
+    mqtt_client.subscribe("ingest/+/debug", handle_base_station_debug)
 
 def generate_client_id():
     return f"ingest-{random.randint(100000, 999999)}"
@@ -81,7 +82,8 @@ class MQTTClient:
         if rc == 0:
             print("Successfully connected to MQTT broker")
             # Resubscribe to all topics
-            for topic in self.topic_handlers.keys():
+            topics = list(self.topic_handlers.keys())
+            for topic in topics:
                 self.client.subscribe(topic)
         else:
             print(f"Failed to connect to MQTT broker with code: {rc}")

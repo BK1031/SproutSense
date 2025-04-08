@@ -65,6 +65,35 @@ def save_phosphorus(bsid, smid, value, millis):
 def save_potassium(bsid, smid, value, millis):
     save_sensor_data(bsid, smid, "potassium", value, millis)
 
+def save_latitude(bsid, smid, value, lat_dir, millis):
+    dir = "N" if lat_dir == 0 else "S"
+    value = convert_to_decimal_degrees(value, dir)
+    save_sensor_data(bsid, smid, "latitude", value, millis)
+
+def save_longitude(bsid, smid, value, lon_dir, millis):
+    dir = "E" if lon_dir == 0 else "W"
+    value = convert_to_decimal_degrees(value, dir)
+    save_sensor_data(bsid, smid, "longitude", value, millis)
+
+def convert_to_decimal_degrees(raw_coord, direction):
+    # Split degrees and minutes
+    if not raw_coord or '.' not in raw_coord:
+        return None  # invalid data
+
+    # Latitude has 2-digit degrees, Longitude has 3-digit degrees
+    degree_length = 2 if direction in ['N', 'S'] else 3
+
+    degrees = int(raw_coord[:degree_length])
+    minutes = float(raw_coord[degree_length:])
+
+    decimal_degrees = degrees + (minutes / 60)
+
+    # South and West are negative
+    if direction in ['S', 'W']:
+        decimal_degrees *= -1
+
+    return decimal_degrees
+
 def save_sensor_data(bsid, smid, name, value, millis):
     db = get_db()
     model = Sensor()
