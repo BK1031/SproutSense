@@ -30,7 +30,6 @@ def handle_message(topic, payload):
     update_base_station_ping(base_station_id)
     update_sensor_module_ping(sensor_module_id)
 
-    print('')
     print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
     if message_id == 1:
         if len(payload) < 13:
