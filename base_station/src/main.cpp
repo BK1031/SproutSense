@@ -156,12 +156,18 @@ void loop() {
         bufferIndex++;
 
         // Send raw byte
-        mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
+        // mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
         
         // Check if we got the end character and have enough data
         if (incoming == MESSAGE_END && bufferIndex >= MIN_MESSAGE_LENGTH) {
             has_data = true;
             break;
+        }
+
+        // buffer overflow, clear and take the data loss
+        if (bufferIndex >= BUFFER_SIZE) {
+            resetBuffer();
+            has_data = false;
         }
     }
 
@@ -169,11 +175,14 @@ void loop() {
         send();
         has_data = false;
         resetBuffer();
+
+        uint8_t response[5] = {'1', '2', '3', '4', '5'};
+        Serial.write(response, 5);
     }
 
     updateRollingBPS();
     
-    if (millis() - lastPrintTime >= 5000) {
+    if (millis() - lastPrintTime >= 2000) {
         lastPrintTime = millis();
 
         char bps_str[16];

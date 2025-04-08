@@ -67,18 +67,10 @@ def save_potassium(bsid, smid, value, millis):
     save_sensor_data(bsid, smid, "potassium", value, millis)
 
 def save_latitude(bsid, smid, value, lat_dir, millis):
-    dir = "N" if lat_dir == 0 else "S"
-    value = convert_to_decimal_degrees(value, dir)
-    print(f"Saving latitude: {value} for sensor module {smid}")
-    # save_sensor_data(bsid, smid, "latitude", value, millis)
-    # update_sensor_module(smid, latitude=value)
+    return
 
 def save_longitude(bsid, smid, value, lon_dir, millis):
-    dir = "E" if lon_dir == 0 else "W"
-    value = convert_to_decimal_degrees(value, dir)
-    print(f"Saving longitude: {value} for sensor module {smid}")
-    # save_sensor_data(bsid, smid, "longitude", value, millis)
-    # update_sensor_module(smid, longitude=value)
+    return
 
 def convert_to_decimal_degrees(raw_coord, direction):
     # Split degrees and minutes
