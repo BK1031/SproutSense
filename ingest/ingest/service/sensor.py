@@ -1,4 +1,5 @@
 import datetime
+from ingest.ingest.service.sensor_module import update_sensor_module
 from ingest.models.sensor import Sensor
 from ingest.database.db import get_db
 
@@ -69,11 +70,13 @@ def save_latitude(bsid, smid, value, lat_dir, millis):
     dir = "N" if lat_dir == 0 else "S"
     value = convert_to_decimal_degrees(value, dir)
     save_sensor_data(bsid, smid, "latitude", value, millis)
+    update_sensor_module(smid, latitude=value)
 
 def save_longitude(bsid, smid, value, lon_dir, millis):
     dir = "E" if lon_dir == 0 else "W"
     value = convert_to_decimal_degrees(value, dir)
     save_sensor_data(bsid, smid, "longitude", value, millis)
+    update_sensor_module(smid, longitude=value)
 
 def convert_to_decimal_degrees(raw_coord, direction):
     # Split degrees and minutes
