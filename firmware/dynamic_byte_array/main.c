@@ -129,6 +129,7 @@ I2C_HandleTypeDef hi2c1;
 RTC_HandleTypeDef hrtc;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart1;
@@ -152,14 +153,14 @@ uint8_t CASE_2_IDENTIFIER = 2;
 uint8_t CASE_3_IDENTIFIER = 3;
 uint8_t CASE_4_IDENTIFIER = 4;
 
-uint8_t sensor_data_case_1[8];
-uint8_t sensor_data_case_2[14];
-uint8_t sensor_data_case_3[18];
-uint8_t sensor_data_case_4[28];
+uint8_t sensor_data_case_1[12];
+uint8_t sensor_data_case_2[18];
+uint8_t sensor_data_case_3[22];
+uint8_t sensor_data_case_4[32];
 
 // Example sensor readings
-uint8_t temperature = 25;   // 25°C
-uint8_t humidity = 60;      // 60%
+uint8_t temperature ;   // 25°C
+uint8_t humidity;      // 60%
 uint16_t nitrogen = 300;    // 300 mg/kg
 uint16_t phosphorus = 154;  // 150 mg/kg
 uint16_t potassium = 206;   // 200 mg/kg
@@ -204,6 +205,8 @@ uint32_t longitude = 119865878;
 uint8_t north_or_south = 0; // 0 = North, 1 = South
 uint8_t east_or_west = 1;   // 0 = East, 1 = West
 
+uint32_t millis = 0;
+
 
 
 int rtc_mins = 2;
@@ -223,6 +226,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_RTC_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -286,8 +290,10 @@ float calculateSoilScore(float volt){
 	return score;
 }
 
+uint8_t response[4];
 void StartUartDmaReceive(void) {
 	HAL_UART_Receive_DMA(&huart1, gpsBuffer, 72);
+//	HAL_UART_Receive_DMA(&huart1, response, 4);
     HAL_UART_Receive_DMA(&huart3, rxBuffer, 7);
 }
 
@@ -404,18 +410,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void create_dynamic_sensor_payload_case(void) {
+//	millis are used for all transmission cases
+    millis = HAL_GetTick();
+
 	if(new_data_flags == 0b00000111){
 		char message[50];
 	    snprintf(message, sizeof(message), "Case 1 Triggered\r\n");
 	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 	    sensor_data_case_1[0] = CASE_1_IDENTIFIER;
-	    sensor_data_case_1[1] = temperature;
-	    sensor_data_case_1[2] = humidity;
-	    sensor_data_case_1[3] = (ch0_data >> 8) & 0xFF;
-	    sensor_data_case_1[4] = ch0_data & 0xFF;
-	    sensor_data_case_1[5] = (ch1_data >> 8) & 0xFF;
-		sensor_data_case_1[6] = ch1_data & 0xFF;
-		sensor_data_case_1[7] = 0xFF;
+		sensor_data_case_1[1] = (millis >> 24) & 0xFF;
+		sensor_data_case_1[2] = (millis >> 16) & 0xFF;
+		sensor_data_case_1[3] = (millis >> 8) & 0xFF;
+		sensor_data_case_1[4] = millis & 0xFF;
+	    sensor_data_case_1[5] = temperature;
+	    sensor_data_case_1[6] = humidity;
+	    sensor_data_case_1[7] = (ch0_data >> 8) & 0xFF;
+	    sensor_data_case_1[8] = ch0_data & 0xFF;
+	    sensor_data_case_1[9] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_1[10] = ch1_data & 0xFF;
+		sensor_data_case_1[11] = 0xFF;
 
 		char buffer[50]; // Enough space to hold formatted output
 		int len = snprintf(buffer, sizeof(buffer),
@@ -433,21 +446,23 @@ void create_dynamic_sensor_payload_case(void) {
 	    snprintf(message, sizeof(message), "Case 2 Triggered\r\n");
 	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 	  	sensor_data_case_2[0] = CASE_2_IDENTIFIER;
-		sensor_data_case_2[1] = temperature;
-		sensor_data_case_2[2] = humidity;
-//		sensor_data_case_2[3] = (uv >> 8) & 0xFF;
-//		sensor_data_case_2[4] = uv & 0xFF;
-		sensor_data_case_2[3] = (ch0_data >> 8) & 0xFF;
-		sensor_data_case_2[4] = ch0_data & 0xFF;
-		sensor_data_case_2[5] = (ch1_data >> 8) & 0xFF;
-		sensor_data_case_2[6] = ch1_data & 0xFF;
-		sensor_data_case_2[7] = (nitrogen_value >> 8) & 0xFF;
-		sensor_data_case_2[8] = nitrogen_value & 0xFF;
-		sensor_data_case_2[9] = (adc_value >> 24) & 0xFF;
-		sensor_data_case_2[10] = (adc_value >> 16) & 0xFF;
-		sensor_data_case_2[11] = (adc_value >> 8) & 0xFF;
-		sensor_data_case_2[12] = adc_value & 0xFF;
-		sensor_data_case_2[13] = 0xFF;
+		sensor_data_case_2[1] = (millis >> 24) & 0xFF;
+		sensor_data_case_2[2] = (millis >> 16) & 0xFF;
+		sensor_data_case_2[3] = (millis >> 8) & 0xFF;
+		sensor_data_case_2[4] = millis & 0xFF;
+		sensor_data_case_2[5] = temperature;
+		sensor_data_case_2[6] = humidity;
+		sensor_data_case_2[7] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_2[8] = ch0_data & 0xFF;
+		sensor_data_case_2[9] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_2[10] = ch1_data & 0xFF;
+		sensor_data_case_2[11] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_2[12] = nitrogen_value & 0xFF;
+		sensor_data_case_2[13] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_2[14] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_2[15] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_2[16] = adc_value & 0xFF;
+		sensor_data_case_2[17] = 0xFF;
 
 		char buffer[100];  // Sufficient space for formatted output
 		int len = snprintf(buffer, sizeof(buffer),
@@ -470,23 +485,27 @@ void create_dynamic_sensor_payload_case(void) {
 	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 
 		sensor_data_case_3[0] = CASE_3_IDENTIFIER;
-		sensor_data_case_3[1] = temperature;
-		sensor_data_case_3[2] = humidity;
-		sensor_data_case_3[3] = (ch0_data >> 8) & 0xFF;
-		sensor_data_case_3[4] = ch0_data & 0xFF;
-		sensor_data_case_3[5] = (ch1_data >> 8) & 0xFF;
-		sensor_data_case_3[6] = ch1_data & 0xFF;
-		sensor_data_case_3[7] = (nitrogen_value >> 8) & 0xFF;
-		sensor_data_case_3[8] = nitrogen_value & 0xFF;
-		sensor_data_case_3[9] = (adc_value >> 24) & 0xFF;
-		sensor_data_case_3[10] = (adc_value >> 16) & 0xFF;
-		sensor_data_case_3[11] = (adc_value >> 8) & 0xFF;
-		sensor_data_case_3[12] = adc_value & 0xFF;
-		sensor_data_case_3[13] = (phosphorus_value >> 8) & 0xFF;
-		sensor_data_case_3[14] = phosphorus_value & 0xFF;
-		sensor_data_case_3[15] = (potassium_value >> 8) & 0xFF;
-		sensor_data_case_3[16] = potassium_value & 0xFF;
-		sensor_data_case_3[17] = 0xFF;
+		sensor_data_case_3[1] = (millis >> 24) & 0xFF;
+		sensor_data_case_3[2] = (millis >> 16) & 0xFF;
+		sensor_data_case_3[3] = (millis >> 8) & 0xFF;
+		sensor_data_case_3[4] = millis & 0xFF;
+		sensor_data_case_3[5] = temperature;
+		sensor_data_case_3[6] = humidity;
+		sensor_data_case_3[7] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_3[8] = ch0_data & 0xFF;
+		sensor_data_case_3[9] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_3[10] = ch1_data & 0xFF;
+		sensor_data_case_3[11] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_3[12] = nitrogen_value & 0xFF;
+		sensor_data_case_3[13] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_3[14] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_3[15] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_3[16] = adc_value & 0xFF;
+		sensor_data_case_3[17] = (phosphorus_value >> 8) & 0xFF;
+		sensor_data_case_3[18] = phosphorus_value & 0xFF;
+		sensor_data_case_3[19] = (potassium_value >> 8) & 0xFF;
+		sensor_data_case_3[20] = potassium_value & 0xFF;
+		sensor_data_case_3[21] = 0xFF;
 
 
 		char buffer[150];  // Large enough for formatted output
@@ -507,33 +526,37 @@ void create_dynamic_sensor_payload_case(void) {
 	    HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 
 		sensor_data_case_4[0] = CASE_4_IDENTIFIER;
-		sensor_data_case_4[1] = temperature;
-		sensor_data_case_4[2] = humidity;
-		sensor_data_case_4[3] = (ch0_data >> 8) & 0xFF;
-		sensor_data_case_4[4] = ch0_data & 0xFF;
-		sensor_data_case_4[5] = (ch1_data >> 8) & 0xFF;
-		sensor_data_case_4[6] = ch1_data & 0xFF;
-		sensor_data_case_4[7] = (nitrogen_value >> 8) & 0xFF;
-		sensor_data_case_4[8] = nitrogen_value & 0xFF;
-		sensor_data_case_4[9] = (adc_value >> 24) & 0xFF;
-		sensor_data_case_4[10] = (adc_value >> 16) & 0xFF;
-		sensor_data_case_4[11] = (adc_value >> 8) & 0xFF;
-		sensor_data_case_4[12] = adc_value & 0xFF;
-		sensor_data_case_4[13] = (phosphorus_value >> 8) & 0xFF;
-		sensor_data_case_4[14] = phosphorus_value & 0xFF;
-		sensor_data_case_4[15] = (potassium_value >> 8) & 0xFF;
-		sensor_data_case_4[16] = potassium_value & 0xFF;
-		sensor_data_case_4[17] = (latitude >> 24) & 0xFF;
-		sensor_data_case_4[18] = (latitude >> 16) & 0xFF;
-		sensor_data_case_4[19] = (latitude >> 8) & 0xFF;
-		sensor_data_case_4[20] = latitude & 0xFF;
-		sensor_data_case_4[21] = north_or_south;
-		sensor_data_case_4[22] = (longitude >> 24) & 0xFF;
-		sensor_data_case_4[23] = (longitude >> 16) & 0xFF;
-		sensor_data_case_4[24] = (longitude >> 8) & 0xFF;
-		sensor_data_case_4[25] = longitude & 0xFF;
-		sensor_data_case_4[26] = east_or_west;
-		sensor_data_case_4[27] = 0xFF;
+		sensor_data_case_4[1] = (millis >> 24) & 0xFF;
+		sensor_data_case_4[2] = (millis >> 16) & 0xFF;
+		sensor_data_case_4[3] = (millis >> 8) & 0xFF;
+		sensor_data_case_4[4] = millis & 0xFF;
+		sensor_data_case_4[5] = temperature;
+		sensor_data_case_4[6] = humidity;
+		sensor_data_case_4[7] = (ch0_data >> 8) & 0xFF;
+		sensor_data_case_4[8] = ch0_data & 0xFF;
+		sensor_data_case_4[9] = (ch1_data >> 8) & 0xFF;
+		sensor_data_case_4[10] = ch1_data & 0xFF;
+		sensor_data_case_4[11] = (nitrogen_value >> 8) & 0xFF;
+		sensor_data_case_4[12] = nitrogen_value & 0xFF;
+		sensor_data_case_4[13] = (adc_value >> 24) & 0xFF;
+		sensor_data_case_4[14] = (adc_value >> 16) & 0xFF;
+		sensor_data_case_4[15] = (adc_value >> 8) & 0xFF;
+		sensor_data_case_4[16] = adc_value & 0xFF;
+		sensor_data_case_4[17] = (phosphorus_value >> 8) & 0xFF;
+		sensor_data_case_4[18] = phosphorus_value & 0xFF;
+		sensor_data_case_4[19] = (potassium_value >> 8) & 0xFF;
+		sensor_data_case_4[20] = potassium_value & 0xFF;
+		sensor_data_case_4[21] = (latitude >> 24) & 0xFF;
+		sensor_data_case_4[22] = (latitude >> 16) & 0xFF;
+		sensor_data_case_4[23] = (latitude >> 8) & 0xFF;
+		sensor_data_case_4[24] = latitude & 0xFF;
+		sensor_data_case_4[25] = north_or_south;
+		sensor_data_case_4[26] = (longitude >> 24) & 0xFF;
+		sensor_data_case_4[27] = (longitude >> 16) & 0xFF;
+		sensor_data_case_4[28] = (longitude >> 8) & 0xFF;
+		sensor_data_case_4[29] = longitude & 0xFF;
+		sensor_data_case_4[30] = east_or_west;
+		sensor_data_case_4[31] = 0xFF;
 
 
 		char buffer[200];
@@ -623,15 +646,35 @@ void create_sensor_payload(uint8_t temperature, uint8_t humidity,
 
 void publish_sensor_data(uint16_t module_id, uint8_t *data, size_t length) {
 	uint8_t buffer[length + 2];  // Create a new buffer with space for the module ID
-	buffer[0] = (module_id >> 8) & 0xFF;  // High byte of module_id
-	buffer[1] = module_id & 0xFF;         // Low byte of module_id
+	buffer[0] = data[0];
+	buffer[1] = (module_id >> 8) & 0xFF;  // High byte of module_id
+	buffer[2] = module_id & 0xFF;         // Low byte of module_id
 
-	memcpy(&buffer[2], data, length);  // Copy sensor data after module ID
+	memcpy(&buffer[3], &data[1], length - 1);  // Copy sensor data after module ID
+	
+//	check abg bps here, if under thereshold then we send
+// else preserve message and set some retry flag, which is read in main, then we directly return here to try again
+//	rolling bps runs every second whithin our while loop in main
 
 	HAL_UART_Transmit(&huart1, buffer, sizeof(buffer), HAL_MAX_DELAY);
 
+//	uint32_t startTransmission = HAL_GetTick();
+//
+//	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET){
+//	}
+//	uint32_t endTranmsission = HAL_GetTick();
+//
+//	uint32_t totalTime = endTranmsission - startTransmission;
+//
+//	char message[50];
+//	snprintf(message, sizeof(message), "Total Time: %lu ms\r\n", totalTime);
+//
+//	// Send message to Termite
+//	HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 
-	memset(data, 0, sizeof(data));
+
+//	memset(data, 0, sizeof(data));
+	memset(data, 0, length);
 	new_data_flags = 0;
 }
 
@@ -794,6 +837,104 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
 	  Set_RTC_Alarm(rtc_mins);
 }
 
+#define DHT11_PIN GPIO_PIN_8
+#define DHT11_GPIO_PORT GPIOA
+
+typedef struct {
+    uint8_t temperature;
+    uint8_t humidity;
+} DHT_Data;
+
+
+void delay_us(uint16_t us){
+//	swap to tim3
+	__HAL_TIM_SET_COUNTER(&htim3, 0);
+//	HAL_TIM_Base_Start(&htim2);
+	while (__HAL_TIM_GET_COUNTER(&htim3) < us);
+//	HAL_TIM_Base_Stop(&htim2);
+
+}
+
+DHT_Data readDHT(void){
+	uint8_t data[5] = {0};
+	DHT_Data dht_data = {0, 0};
+	int i, j;
+
+	HAL_GPIO_WritePin(DHT11_GPIO_PORT, DHT11_PIN, GPIO_PIN_RESET);
+	HAL_Delay(18);
+
+	HAL_GPIO_WritePin(DHT11_GPIO_PORT, DHT11_PIN, GPIO_PIN_SET);
+
+
+	delay_us(30);
+
+
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = DHT11_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(DHT11_GPIO_PORT, &GPIO_InitStruct);
+
+	uint32_t timeout = 10000;
+	    while (HAL_GPIO_ReadPin(DHT11_GPIO_PORT, DHT11_PIN) == GPIO_PIN_SET) {
+	        if (--timeout == 0){
+	        	return dht_data;
+	        }
+	    }
+
+	    delay_us(80);
+
+	    timeout = 1000;
+	    while (HAL_GPIO_ReadPin(DHT11_GPIO_PORT, DHT11_PIN) == GPIO_PIN_RESET) {
+	        if (--timeout == 0) {
+	        	return dht_data;
+	        }
+	    }
+
+	    delay_us(80);
+
+
+
+	 for (i = 0; i < 5; i++) {
+	         for (j = 7; j >= 0; j--) {
+	             while (HAL_GPIO_ReadPin(DHT11_GPIO_PORT, DHT11_PIN) == GPIO_PIN_RESET);
+
+	             delay_us(30);
+	             if (HAL_GPIO_ReadPin(DHT11_GPIO_PORT, DHT11_PIN) == GPIO_PIN_SET) {
+	                 data[i] |= (1 << j);
+	             }
+	             while (HAL_GPIO_ReadPin(DHT11_GPIO_PORT, DHT11_PIN) == GPIO_PIN_SET);
+	         }
+	 }
+	 if ((data[0] + data[1] + data[2] + data[3]) == data[4]) {
+	         dht_data.humidity = data[0];
+	         dht_data.temperature = data[2];
+	}
+
+	 GPIO_InitStruct.Pin = DHT11_PIN;
+	 GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	 GPIO_InitStruct.Pull = GPIO_NOPULL;
+	 HAL_GPIO_Init(DHT11_GPIO_PORT, &GPIO_InitStruct);
+	return dht_data;
+}
+
+DHT_Data readAndTransmitDHT(void) {
+	DHT_Data sensorData = readDHT();
+	char msg[50];
+    if (sensorData.humidity > 0 || sensorData.temperature > 0) {
+	    sprintf(msg, "Humidity: %d%%, Temperature: %u°C\r\n", sensorData.humidity, sensorData.temperature);
+	    HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    } else {
+	     //throw error
+	    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+    }
+
+    return sensorData;
+}
+
+DHT_Data temp_hum;
+
+
 /* USER CODE END 0 */
 
 /**
@@ -834,13 +975,18 @@ int main(void)
   MX_ADC1_Init();
   MX_I2C1_Init();
   MX_RTC_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   StartUartDmaReceive();
   Set_RTC_Alarm(rtc_mins);
 
+//  get HAL_GetTick() returns a uint32
+
 
 //  before any of this init code i need to start my micro second counter for the dht and read data from the sensor, this included the gps init as well
+  HAL_TIM_Base_Start(&htim3);
+  readAndTransmitDHT();
   uv_init();
   gps_init();
 
@@ -855,6 +1001,7 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -867,9 +1014,15 @@ int main(void)
 
 
 	  if(new_data_flags ==  0b00000111){
+		  temp_hum = readDHT();
+		  temperature = temp_hum.temperature;
+		  humidity = temp_hum.humidity;
 		  create_dynamic_sensor_payload_case();
 		  publish_sensor_data(MODULE_ID, sensor_data_case_1, sizeof(sensor_data_case_1));
 	  }else if(new_data_flags == 0b01001111) {
+		  temp_hum = readDHT();
+		  temperature = temp_hum.temperature;
+		  humidity = temp_hum.humidity;
 		  NPK_ReadSensor_DMA();
 		  HAL_Delay(63);
 
@@ -879,6 +1032,9 @@ int main(void)
 		  create_dynamic_sensor_payload_case();
 		  publish_sensor_data(MODULE_ID, sensor_data_case_2, sizeof(sensor_data_case_2));
 	  }else if(new_data_flags == 0b01111111){
+		  temp_hum = readDHT();
+		  temperature = temp_hum.temperature;
+		  humidity = temp_hum.humidity;
 		  current_sensor = 0;
 		  NPK_ReadSensor_DMA();
 		  HAL_Delay(63);
@@ -901,6 +1057,9 @@ int main(void)
 		  publish_sensor_data(MODULE_ID, sensor_data_case_3, sizeof(sensor_data_case_3));
 
 	  }else if(new_data_flags == 0b11111111){
+		  temp_hum = readDHT();
+		  temperature = temp_hum.temperature;
+		  humidity = temp_hum.humidity;
 		  current_sensor = 0;
 		  NPK_ReadSensor_DMA();
 		  HAL_Delay(63);
@@ -929,6 +1088,8 @@ int main(void)
 		  HAL_ResumeTick();
 
 	  }
+
+//	  HAL_Delay(4000);
 
   }
   /* USER CODE END 3 */
@@ -1233,6 +1394,51 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 79;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * @brief TIM5 Initialization Function
   * @param None
   * @retval None
@@ -1425,7 +1631,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|GPIO_PIN_8, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -1433,12 +1642,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : LD2_Pin PA8 */
+  GPIO_InitStruct.Pin = LD2_Pin|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC7 PC8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
