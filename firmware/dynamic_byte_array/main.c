@@ -211,6 +211,8 @@ uint32_t millis = 0;
 
 int rtc_mins = 2;
 
+int retry_publish = 0;
+
 
 /* USER CODE END PV */
 
@@ -233,6 +235,49 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+unsigned long lastCheckTime = 0;
+unsigned long byteCount = 0;
+float avgBPS = 0;
+
+void countBytesInBuffer(uint8_t *buffer, uint16_t len) {
+    char cntBuffer[50];
+
+    for (uint16_t i = 0; i < len; i++) {
+
+    	if(buffer[i] != 0){
+    		byteCount += 1;
+    	}
+    }
+
+    sprintf(cntBuffer, "cnt = %d\r\n", byteCount);
+    HAL_UART_Transmit(&huart2, (uint8_t*)cntBuffer, strlen(cntBuffer), HAL_MAX_DELAY);
+
+//    strcat(uartLine, "\r\n");  // Line ending for Termite
+//    HAL_UART_Transmit(&huart2, (uint8_t*)uartLine, strlen(uartLine), HAL_MAX_DELAY);
+}
+
+void updateRollingBPS() {
+//	switch this out for its own dedicated buffer on the pcb version of the projecty(
+	HAL_UART_Receive_DMA(&huart1, gpsBuffer, 72);
+	HAL_Delay(300);
+	countBytesInBuffer(gpsBuffer, 72);
+	memset(gpsBuffer, 0, 72);
+    const unsigned long CHECK_INTERVAL = 1000; // Check every second
+    unsigned long currentTime = HAL_GetTick();
+    float elapsedTime = (currentTime - lastCheckTime) / 1000.0;
+    char bpsBuffer[50];
+
+    if (elapsedTime >= (CHECK_INTERVAL / 1000.0)) {
+        float currentBPS = byteCount / elapsedTime;
+        avgBPS = (0.2 * avgBPS) + (0.8 * currentBPS);
+        byteCount = 0;
+        lastCheckTime = currentTime;
+    }
+
+    sprintf(bpsBuffer, "avgBPS = %.2f\r\n", avgBPS);  // Format with 2 decimal places
+    HAL_UART_Transmit(&huart2, (uint8_t*)bpsBuffer, strlen(bpsBuffer), HAL_MAX_DELAY);
+}
+
 HAL_StatusTypeDef NPK_ReadSensor_DMA(void) {
     uint8_t comN[] = {0x01, 0x03, 0x00, 0x1E, 0x00, 0x01, 0xE4, 0x0C};
     memcpy(txBuffer, comN, 8);
@@ -644,6 +689,19 @@ void create_sensor_payload(uint8_t temperature, uint8_t humidity,
 }
 
 
+uint8_t *published_buffer = NULL;
+
+void retry_publish_sensor_data(uint8_t *data) {
+	if(retry_publish <= 3){
+		if(avgBPS < 1){
+			HAL_UART_Transmit(&huart1, data, sizeof(data), HAL_MAX_DELAY);
+			retry_publish = 0;
+		}
+	}else{
+		retry_publish = 0;
+	}
+}
+
 void publish_sensor_data(uint16_t module_id, uint8_t *data, size_t length) {
 	uint8_t buffer[length + 2];  // Create a new buffer with space for the module ID
 	buffer[0] = data[0];
@@ -651,29 +709,29 @@ void publish_sensor_data(uint16_t module_id, uint8_t *data, size_t length) {
 	buffer[2] = module_id & 0xFF;         // Low byte of module_id
 
 	memcpy(&buffer[3], &data[1], length - 1);  // Copy sensor data after module ID
-	
+
 //	check abg bps here, if under thereshold then we send
 // else preserve message and set some retry flag, which is read in main, then we directly return here to try again
 //	rolling bps runs every second whithin our while loop in main
 
-	HAL_UART_Transmit(&huart1, buffer, sizeof(buffer), HAL_MAX_DELAY);
+	if(avgBPS < 1){
+		HAL_UART_Transmit(&huart1, buffer, sizeof(buffer), HAL_MAX_DELAY);
+		retry_publish = 0;
 
-//	uint32_t startTransmission = HAL_GetTick();
-//
-//	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET){
-//	}
-//	uint32_t endTranmsission = HAL_GetTick();
-//
-//	uint32_t totalTime = endTranmsission - startTransmission;
-//
-//	char message[50];
-//	snprintf(message, sizeof(message), "Total Time: %lu ms\r\n", totalTime);
-//
-//	// Send message to Termite
-//	HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+	}else{
+//		set some retry flag
+		retry_publish += 1;
+		if(published_buffer != NULL){
+			free(published_buffer);
+		}
 
+		published_buffer = malloc(length + 2);
 
-//	memset(data, 0, sizeof(data));
+		if (published_buffer != NULL) {
+			memcpy(published_buffer, buffer, length + 2);
+		}
+	}
+
 	memset(data, 0, length);
 	new_data_flags = 0;
 }
@@ -830,7 +888,8 @@ void Set_RTC_Alarm(int mins)
 }
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
-	  parseGNRMC((const char*)gpsBuffer);
+//    Bring this back
+//	  parseGNRMC((const char*)gpsBuffer);
 //	  HAL_UART_Transmit(&huart2, gpsBuffer, strlen((char*)gpsBuffer), 1000);
 	  new_data_flags |= FLAG_GPS;
 	  rtc_mins += 2;
@@ -1012,6 +1071,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	  updateRollingBPS();
+
+	  if(retry_publish != 0){
+		  retry_publish_sensor_data(published_buffer);
+		  continue;
+	  }
+
 
 	  if(new_data_flags ==  0b00000111){
 		  temp_hum = readDHT();
@@ -1077,7 +1143,8 @@ int main(void)
 
 
 	  }else{
-		  snprintf(message, sizeof(message), "CPU is going to sleep\r\n");
+//		  Sleep logic if we still want to sleep the cpu while its not in a transmission case, not really an option if we always want the rolling bsp alg running
+		  /*snprintf(message, sizeof(message), "CPU is going to sleep\r\n");
 		  HAL_UART_Transmit(&huart2, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 
 		  HAL_SuspendTick();
@@ -1085,11 +1152,11 @@ int main(void)
 
 		  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
-		  HAL_ResumeTick();
+		  HAL_ResumeTick();*/
 
 	  }
-
-//	  HAL_Delay(4000);
+//	  this is only for testing rolling bps for now
+	  HAL_Delay(200);
 
   }
   /* USER CODE END 3 */
