@@ -3,6 +3,7 @@ name: sprout_sense
 services:
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -14,10 +15,28 @@ services:
 
   nanomq:
     image: emqx/nanomq:latest
+    restart: unless-stopped
     ports:
       - "1883:1883"
       - "8083:8083"
       - "8883:8883"
+
+  ingest:
+    image: bk1031/sprout_sense_ingest:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+      - nanomq
+    ports:
+      - "5050:5050"
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=sprout_sense
+      - MQTT_HOST=nanomq
+      - MQTT_PORT=1883
 
 volumes:
   pgdata:
