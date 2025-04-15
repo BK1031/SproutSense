@@ -132,3 +132,5 @@ def get_all_sensor_data() -> list[Sensor]:
     """Get all sensor data"""
     db = get_db()
     return db.query(Sensor).all()
+
+# filter by most recent time and sensord data and sensor module
