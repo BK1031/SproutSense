@@ -7,11 +7,13 @@ Web application for the SproutSense management portal. This application is built
 Make sure you have node.js and npm installed.
 
 First, install the dependencies:
+
 ```
 npm i
 ```
 
 Then, run the development server:
+
 ```
 npm run dev
 ```

@@ -3,35 +3,29 @@ import { Link } from "react-router-dom";
 
 function Statistics() {
   return (
-    <div className="p-4 bg-gray-800 min-h-screen text-white">
-        {/* Navbar */}
+    <div className="min-h-screen bg-gray-800 p-4 text-white">
+      {/* Navbar */}
       <header className="flex items-center justify-between p-4">
-      <Link
-          to="/"
-          className="text-lg font-bold"
-        >
+        <Link to="/" className="text-lg font-bold">
           SproutSense
         </Link>
-        <button className="flex items-center bg-green-500 px-3 py-1 rounded-md">
+        <button className="flex items-center rounded-md bg-green-500 px-3 py-1">
           Live <span className="ml-2">▼</span>
         </button>
       </header>
 
       <h2 className="text-xl font-bold">Statistics</h2>
       <p>Here you can view detailed statistics about your crops.</p>
-{/* Bottom Navigation */}
-<footer className="fixed bottom-0 left-0 w-full bg-gray-900 p-4 flex justify-around">
+      {/* Bottom Navigation */}
+      <footer className="fixed bottom-0 left-0 flex w-full justify-around bg-gray-900 p-4">
         <Link
           to="/statistics"
-          className="text-gray-400 hover:text-white text-center"
+          className="text-center text-gray-400 hover:text-white"
         >
           📊 <br />
           Statistics
         </Link>
-        <Link
-          to="/map"
-          className="text-gray-400 hover:text-white text-center"
-        >
+        <Link to="/map" className="text-center text-gray-400 hover:text-white">
           📍 <br />
           Map
         </Link>
