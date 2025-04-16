@@ -29,6 +29,12 @@ function Map() {
       baseStationMarkers.current = [];
       sensorModuleMarkers.current = [];
 
+      // Set map center to first base station
+    if (baseStations.length > 0) {
+      const firstBS = baseStations[0];
+      mapRef.current.setCenter([firstBS.longitude, firstBS.latitude]);
+    }
+
       // Add new base station markers
       baseStations.forEach((bs: any) => {
         const marker = new mapboxgl.Marker({ color: "blue" })
