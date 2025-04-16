@@ -11,3 +11,14 @@ class Sensor(Base):
     value = Column(Float, nullable=False)
     millis = Column(Integer, nullable=False)
     created_at = Column(DateTime, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'smid': self.smid,
+            'bsid': self.bsid,
+            'name': self.name,
+            'value': self.value,
+            'millis': self.millis,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }

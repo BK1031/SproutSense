@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import { Link } from "react-router-dom";
 
 function App() {
@@ -118,7 +118,7 @@ function App() {
 {/* Bottom Navigation */}
 <footer className="fixed bottom-0 left-0 w-full bg-gray-900 p-4 flex justify-around">
         <Link
-          to="/statistics"
+          to="/"
           className="text-gray-400 hover:text-white text-center"
         >
           📊 <br />

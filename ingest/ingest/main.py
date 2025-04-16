@@ -12,6 +12,9 @@ def create_app():
     from ingest.routes.ping import ping_bp
     app.register_blueprint(ping_bp)
 
+    from ingest.routes.api import api_bp 
+    app.register_blueprint(api_bp)
+
     CORS(app, supports_credentials=True)
 
     return app
