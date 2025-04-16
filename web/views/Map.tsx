@@ -57,17 +57,16 @@ function Map() {
   }, []);
 
   return (
-    <div className="p-4 bg-gray-800 min-h-screen text-white">
+    <div className="min-h-screen bg-gray-800 p-4 text-white">
       {/* Navbar */}
       <header className="flex items-center justify-between p-4">
         <Link to="/" className="text-lg font-bold">
           SproutSense
         </Link>
-        <button className="flex items-center bg-green-500 px-3 py-1 rounded-md">
+        <button className="flex items-center rounded-md bg-green-500 px-3 py-1">
           Live <span className="ml-2">▼</span>
         </button>
       </header>
-
       <h2 className="text-xl font-bold mb-2">Map</h2>
       <p className="mb-4">Here you can view the map of your farm and sensor locations.</p>
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function App() {
@@ -7,7 +7,8 @@ function App() {
     {
       id: 2,
       title: "NPK",
-      description: "Nitrogen: 20 mg/L\nPhosphorous: 20 mg/L\nPotassium: 20 mg/L",
+      description:
+        "Nitrogen: 20 mg/L\nPhosphorous: 20 mg/L\nPotassium: 20 mg/L",
     },
     { id: 3, title: "Temperature", value: "90 degrees fahrenheit" },
     { id: 4, title: "Humidity", value: "79/100", progress: 79 },
@@ -26,57 +27,54 @@ function App() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-darkGray to-gray-800 min-h-screen p-4 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-darkGray to-gray-800 p-4 text-white">
       {/* Navbar */}
       <header className="flex items-center justify-between p-4">
-        <Link
-          to="/"
-          className="text-lg font-bold"
-        >
+        <Link to="/" className="text-lg font-bold">
           SproutSense
         </Link>
         <div className="relative">
           <button
             onClick={handleDropdownToggle}
-            className="flex items-center bg-green-500 px-3 py-1 rounded-md"
+            className="flex items-center rounded-md bg-green-500 px-3 py-1"
           >
             {selectedOption} <span className="ml-2">▼</span>
           </button>
           {isDropdownOpen && (
-            <ul className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-lg w-48">
+            <ul className="absolute right-0 mt-2 w-48 rounded-md bg-white text-black shadow-lg">
               <li
                 onClick={() => handleOptionSelect("Live")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Live
               </li>
               <li
                 onClick={() => handleOptionSelect("Hourly")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Hourly
               </li>
               <li
                 onClick={() => handleOptionSelect("Daily")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Daily
               </li>
               <li
                 onClick={() => handleOptionSelect("Weekly")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Weekly
               </li>
               <li
                 onClick={() => handleOptionSelect("Monthly")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Monthly
               </li>
               <li
                 onClick={() => handleOptionSelect("Yearly")}
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="cursor-pointer px-4 py-2 hover:bg-gray-200"
               >
                 Yearly
               </li>
@@ -86,26 +84,28 @@ function App() {
       </header>
 
       {/* Cards */}
-      <div className="space-y-4 mt-4">
+      <div className="mt-4 space-y-4">
         {cards.map((card, index) => (
           <div
             key={card.id}
-            className={`p-4 rounded-lg ${
+            className={`rounded-lg p-4 ${
               index % 2 === 0 ? "bg-cardGreen1" : "bg-cardGreen2"
             }`}
           >
             <h2 className="text-lg font-semibold">{card.title}</h2>
-            {card.value && <p className="text-xl font-bold mt-2">{card.value}</p>}
+            {card.value && (
+              <p className="mt-2 text-xl font-bold">{card.value}</p>
+            )}
             {card.description && (
-              <pre className="text-sm whitespace-pre-line mt-2">
+              <pre className="mt-2 whitespace-pre-line text-sm">
                 {card.description}
               </pre>
             )}
             {card.progress !== undefined && (
               <div className="mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="h-2 w-full rounded-full bg-gray-200">
                   <div
-                    className="bg-green-600 h-2 rounded-full"
+                    className="h-2 rounded-full bg-green-600"
                     style={{ width: `${card.progress}%` }}
                   ></div>
                 </div>
@@ -115,19 +115,16 @@ function App() {
         ))}
       </div>
 
-{/* Bottom Navigation */}
-<footer className="fixed bottom-0 left-0 w-full bg-gray-900 p-4 flex justify-around">
+      {/* Bottom Navigation */}
+      <footer className="fixed bottom-0 left-0 flex w-full justify-around bg-gray-900 p-4">
         <Link
           to="/statistics"
-          className="text-gray-400 hover:text-white text-center"
+          className="text-center text-gray-400 hover:text-white"
         >
           📊 <br />
           Statistics
         </Link>
-        <Link
-          to="/map"
-          className="text-gray-400 hover:text-white text-center"
-        >
+        <Link to="/map" className="text-center text-gray-400 hover:text-white">
           📍 <br />
           Map
         </Link>

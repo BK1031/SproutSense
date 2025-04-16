@@ -1,9 +1,4 @@
-import {
-  faCheckCircle,
-  faWarning,
-  faXmarkCircle,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Notify {
@@ -21,19 +16,19 @@ export const notify: Notify = {
   },
   success: (title: string, description?: string) => {
     toast(title, {
-      icon: <FontAwesomeIcon icon={faCheckCircle} className="text-green-400" />,
+      icon: <CheckCircle2 className="text-green-400" />,
       description: description,
     });
   },
   warning: (title: string, description?: string) => {
     toast(title, {
-      icon: <FontAwesomeIcon icon={faWarning} className="text-yellow-400" />,
+      icon: <AlertTriangle className="text-yellow-400" />,
       description: description,
     });
   },
   error: (title: string, description?: string) => {
     toast(title, {
-      icon: <FontAwesomeIcon icon={faXmarkCircle} className="text-red-400" />,
+      icon: <XCircle className="text-red-400" />,
       description: description,
     });
   },
