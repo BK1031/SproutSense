@@ -8,8 +8,7 @@ from ingest.service.bps import save_bps
 def handle_message(topic, payload):
     print('--------------------------------')
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
-    save_mqtt_message(topic, payload)
-    save_system_log(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
+    save_mqtt_message(topic, f"{', '.join([f'0x{byte:02x}' for byte in payload])}")
         
     if len(topic.split("/")) != 2:
         print(f"Invalid topic: {topic}")
@@ -32,6 +31,7 @@ def handle_message(topic, payload):
         return
 
     print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
+    save_system_log(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
     if message_id == 1:
         if len(payload) < 13:
             print(f"Message 1 not at least 13 bytes")
