@@ -18,8 +18,8 @@ def create_sensor_module(id: int, name: str) -> SensorModule:
     sensor_module.name = name
     sensor_module.latitude = 0.0
     sensor_module.longitude = 0.0
-    sensor_module.last_ping = datetime.datetime.now()
-    sensor_module.created_at = datetime.datetime.now()
+    sensor_module.last_ping = datetime.datetime.now(datetime.timezone.utc)
+    sensor_module.created_at = datetime.datetime.now(datetime.timezone.utc)
     db.add(sensor_module)
     db.commit()
     return sensor_module
@@ -42,7 +42,7 @@ def update_sensor_module(id: int, **kwargs) -> SensorModule:
         for key, value in kwargs.items():
             if hasattr(sensor_module, key):
                 setattr(sensor_module, key, value)
-        sensor_module.last_ping = datetime.datetime.now()
+        sensor_module.last_ping = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
     return sensor_module
 
@@ -61,6 +61,6 @@ def update_sensor_module_ping(id: int) -> SensorModule:
     db = get_db()
     sensor_module = get_sensor_module(id)
     if sensor_module:
-        sensor_module.last_ping = datetime.datetime.now()
+        sensor_module.last_ping = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
     return sensor_module

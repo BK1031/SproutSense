@@ -9,7 +9,7 @@ def save_bps(bsid: int, value: float) -> BPS:
     bps = BPS()
     bps.bsid = bsid
     bps.value = value
-    bps.created_at = datetime.datetime.now()
+    bps.created_at = datetime.datetime.now(datetime.timezone.utc)
     db.add(bps)
     db.commit()
     return bps
@@ -66,6 +66,6 @@ def get_bps_for_bsid_and_duration(bsid: int, duration: int = None) -> list[BPS]:
     else:
         bps = db.query(BPS).filter(
             BPS.bsid == bsid,
-            BPS.created_at > datetime.datetime.now() - datetime.timedelta(minutes=duration)
+            BPS.created_at > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=duration)
         ).order_by(BPS.created_at.asc()).all()
     return bps

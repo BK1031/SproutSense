@@ -6,6 +6,7 @@ from ingest.service.log import (
     get_all_system_logs,
     get_all_mqtt_logs
 )
+import datetime
 
 router = APIRouter(
     prefix="/logs",
@@ -31,7 +32,7 @@ async def get_system_logs():
         SystemLogResponse(
             id=log.id,
             message=log.message,
-            created_at=log.created_at.isoformat()
+            created_at=log.created_at.astimezone(datetime.timezone.utc).isoformat()
         )
         for log in logs
     ]
@@ -45,7 +46,7 @@ async def get_mqtt_logs():
             id=log.id,
             topic=log.topic,
             message=log.message,
-            created_at=log.created_at.isoformat()
+            created_at=log.created_at.astimezone(datetime.timezone.utc).isoformat()
         )
         for log in logs
     ]

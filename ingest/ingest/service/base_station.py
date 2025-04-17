@@ -18,8 +18,8 @@ def create_base_station(id: int, name: str) -> BaseStation:
     base_station.name = name
     base_station.latitude = 0.0
     base_station.longitude = 0.0
-    base_station.last_ping = datetime.datetime.now()
-    base_station.created_at = datetime.datetime.now()
+    base_station.last_ping = datetime.datetime.now(datetime.timezone.utc)
+    base_station.created_at = datetime.datetime.now(datetime.timezone.utc)
     db.add(base_station)
     db.commit()
     return base_station
@@ -42,7 +42,7 @@ def update_base_station(id: int, **kwargs) -> BaseStation:
         for key, value in kwargs.items():
             if hasattr(base_station, key):
                 setattr(base_station, key, value)
-        base_station.last_ping = datetime.datetime.now()
+        base_station.last_ping = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
     return base_station
 
@@ -61,6 +61,6 @@ def update_base_station_ping(id: int) -> BaseStation:
     db = get_db()
     base_station = get_base_station(id)
     if base_station:
-        base_station.last_ping = datetime.datetime.now()
+        base_station.last_ping = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
     return base_station

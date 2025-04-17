@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from pydantic import BaseModel
 import ingest.service.bps as bps_service
+import datetime
 
 router = APIRouter(
     prefix="/bps",
@@ -79,7 +80,7 @@ async def get_bps_history(bsid: int, duration: int = None):
         BPSResponse(
             bsid=bps.bsid,
             value=bps.value,
-            created_at=bps.created_at.isoformat()
+            created_at=bps.created_at.astimezone(datetime.timezone.utc).isoformat()
         )
         for bps in bps_list
     ]

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from typing import List
 from pydantic import BaseModel
 from ingest.service.query import merge_to_largest, query_latest_sensors, query_sensors
+import datetime
 
 router = APIRouter(
     prefix="/query",
@@ -35,7 +36,7 @@ async def get_latest_sensors(smid: int = None, sensors: str = None):
     
     sensor_list = sensors.split(",")
     result = query_latest_sensors(smid, sensor_list)
-    result['created_at'] = result['created_at'].apply(lambda x: x.isoformat())
+    result['created_at'] = result['created_at'].apply(lambda x: x.astimezone(datetime.timezone.utc).isoformat())
     response = result.to_dict('records')
     return response
 
@@ -68,6 +69,6 @@ async def get_historic_sensors(smid: int = None, sensors: str = None, start: str
     sensor_list = sensors.split(",")
     result = query_sensors(smid, sensor_list, start, end)
     result = merge_to_largest(*result, fill=fill)
-    result['created_at'] = result['created_at'].apply(lambda x: x.isoformat())
+    result['created_at'] = result['created_at'].apply(lambda x: x.astimezone(datetime.timezone.utc).isoformat())
     response = result.to_dict('records')
     return response

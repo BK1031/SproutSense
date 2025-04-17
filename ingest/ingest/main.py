@@ -5,12 +5,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from ingest.config.config import VERSION, PORT
 import uvicorn
+
 def create_app():
     app = FastAPI(
         title="SproutSense Ingest Service",
         description="API Documentation",
         version=VERSION
     )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     app.include_router(ping.router)
     app.include_router(query.router)
     app.include_router(bps.router)
