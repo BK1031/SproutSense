@@ -40,6 +40,7 @@
     "mapbox-gl": "^3.11.0",
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
+    "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.2",
     "react-superstore": "^0.1.4",
