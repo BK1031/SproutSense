@@ -22,3 +22,13 @@ def save_mqtt_message(topic: str, message: str) -> MqttLog:
     db.add(mqtt_log)
     db.commit()
     return mqtt_log
+
+def get_all_mqtt_logs() -> list[MqttLog]:
+    """Get all MQTT logs"""
+    db = get_db()
+    return db.query(MqttLog).order_by(MqttLog.created_at.desc()).all()
+
+def get_all_system_logs() -> list[SystemLog]:
+    """Get all system logs"""
+    db = get_db()
+    return db.query(SystemLog).order_by(SystemLog.created_at.desc()).all()
