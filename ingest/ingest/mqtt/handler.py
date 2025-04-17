@@ -145,4 +145,6 @@ def handle_base_station_debug(topic, payload):
     base_station_id = int(topic.split("/")[1])
     print(f"Base Station {base_station_id} Debug: {payload.decode('utf-8')}")
     save_system_log(f"Base Station {base_station_id} Debug: {payload.decode('utf-8')}")
+    create_base_station_if_not_exists(base_station_id)
+    update_base_station_ping(base_station_id)
     return

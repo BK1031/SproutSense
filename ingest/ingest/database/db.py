@@ -28,7 +28,12 @@ def init_db():
         raise ValueError("DATABASE_NAME is not set")
     else:
         global db_session
-        engine = create_engine(DATABASE_URL)
+        engine = create_engine(
+            DATABASE_URL,
+            connect_args={
+                'options': '-c timezone=UTC'
+            }
+        )
         db_session = scoped_session(
             sessionmaker(
                 autocommit=False,

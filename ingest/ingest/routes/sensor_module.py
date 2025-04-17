@@ -39,8 +39,8 @@ async def get_module(id: int):
         name=sensor_module.name,
         latitude=sensor_module.latitude,
         longitude=sensor_module.longitude,
-        last_ping=sensor_module.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-        created_at=sensor_module.created_at.astimezone(datetime.timezone.utc).isoformat()
+        last_ping=sensor_module.last_ping.isoformat(),
+        created_at=sensor_module.created_at.isoformat()
     )
 
 @router.get("", response_model=List[SensorModuleResponse])
@@ -53,8 +53,8 @@ async def list_modules():
             name=module.name,
             latitude=module.latitude,
             longitude=module.longitude,
-            last_ping=module.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-            created_at=module.created_at.astimezone(datetime.timezone.utc).isoformat()
+            last_ping=module.last_ping.isoformat(),
+            created_at=module.created_at.isoformat()
         )
         for module in modules
     ]
@@ -70,8 +70,8 @@ async def update_module(id: int, update: SensorModuleUpdate):
         name=sensor_module.name,
         latitude=sensor_module.latitude,
         longitude=sensor_module.longitude,
-        last_ping=sensor_module.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-        created_at=sensor_module.created_at.astimezone(datetime.timezone.utc).isoformat()
+        last_ping=sensor_module.last_ping.isoformat(),
+        created_at=sensor_module.created_at.isoformat()
     )
 
 @router.delete("/{id}")

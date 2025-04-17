@@ -80,7 +80,7 @@ async def get_bps_history(bsid: int, duration: int = None):
         BPSResponse(
             bsid=bps.bsid,
             value=bps.value,
-            created_at=bps.created_at.astimezone(datetime.timezone.utc).isoformat()
+            created_at=bps.created_at.isoformat()
         )
         for bps in bps_list
     ]

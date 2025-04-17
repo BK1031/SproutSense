@@ -35,8 +35,8 @@ async def get_base_station(id: int):
         name=base_station.name,
         latitude=base_station.latitude,
         longitude=base_station.longitude,
-        last_ping=base_station.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-        created_at=base_station.created_at.astimezone(datetime.timezone.utc).isoformat()
+        last_ping=base_station.last_ping.isoformat(),
+        created_at=base_station.created_at.isoformat()
     )
 
 @router.get("", response_model=List[BaseStationResponse])
@@ -49,8 +49,8 @@ async def list_base_stations():
             name=base_station.name,
             latitude=base_station.latitude,
             longitude=base_station.longitude,
-            last_ping=base_station.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-            created_at=base_station.created_at.astimezone(datetime.timezone.utc).isoformat()
+            last_ping=base_station.last_ping.isoformat(),
+            created_at=base_station.created_at.isoformat()
         )
         for base_station in base_stations
     ]
@@ -66,8 +66,8 @@ async def update_base_station(id: int, update: BaseStationUpdate):
         name=base_station.name,
         latitude=base_station.latitude,
         longitude=base_station.longitude,
-        last_ping=base_station.last_ping.astimezone(datetime.timezone.utc).isoformat(),
-        created_at=base_station.created_at.astimezone(datetime.timezone.utc).isoformat()
+        last_ping=base_station.last_ping.isoformat(),
+        created_at=base_station.created_at.isoformat()
     )
 
 @router.delete("/{id}")

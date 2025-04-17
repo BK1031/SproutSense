@@ -32,7 +32,7 @@ async def get_system_logs():
         SystemLogResponse(
             id=log.id,
             message=log.message,
-            created_at=log.created_at.astimezone(datetime.timezone.utc).isoformat()
+            created_at=log.created_at.isoformat()
         )
         for log in logs
     ]
@@ -46,8 +46,7 @@ async def get_mqtt_logs():
             id=log.id,
             topic=log.topic,
             message=log.message,
-            created_at=log.created_at.astimezone(datetime.timezone.utc).isoformat()
+            created_at=log.created_at.isoformat()
         )
         for log in logs
     ]
-
