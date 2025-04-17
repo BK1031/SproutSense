@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function CurrentWeatherCard() {
-  const [location, setLocation] = useState("Goleta, CA");
+  const [location] = useState("Goleta, CA");
   const [temperature, setTemperature] = useState(0);
   const [humidity, setHumidity] = useState(0);
 

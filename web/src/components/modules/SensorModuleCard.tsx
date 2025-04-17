@@ -1,7 +1,6 @@
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  Circle,
   LocateFixed,
   LocateOff,
 } from "lucide-react";

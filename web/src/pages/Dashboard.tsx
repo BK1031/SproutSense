@@ -1,8 +1,7 @@
 import Layout from "@/components/Layout";
 import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { Widget } from "@/components/dashboard/Widget";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf, Droplets, Thermometer } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 export default function Dashboard() {
   return (
