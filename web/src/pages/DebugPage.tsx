@@ -35,7 +35,7 @@ export default function DebugPage() {
 
   return (
     <Layout activeTab="debug" headerTitle="Debug">
-      <div className="flex w-full flex-wrap gap-4 overflow-auto pb-14">
+      <div className="flex w-full flex-wrap gap-4 overflow-auto p-8 pb-14">
         <Card className="min-w-[400px] flex-1">
           <CardHeader>
             <CardTitle>System Logs</CardTitle>
@@ -77,7 +77,7 @@ export default function DebugPage() {
                         {new Date(log.created_at + "Z").toLocaleString()}
                       </span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex items-start gap-2">
                       <Card className="bg-green-500/50 px-1.5 py-0.5 text-white dark:text-primary">
                         {log.topic}
                       </Card>

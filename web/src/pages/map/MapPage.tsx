@@ -17,6 +17,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { MapMarker } from "@/components/map/MapMarker";
 import { createRoot } from "react-dom/client";
 import { useTheme } from "@/components/theme-provider";
+import BaseStationCard from "@/components/modules/BaseStationCard";
+import SensorModuleCard from "@/components/modules/SensorModuleCard";
+import BaseStationDialog from "@/components/map/BaseStationCard";
+import SensorModuleDialog from "@/components/map/SensorModuleCard";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
@@ -24,6 +29,12 @@ export default function MapPage() {
   const refreshInterval = useRefreshInterval();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
+  const [selectedModule, setSelectedModule] = useState<
+    BaseStation | SensorModule | null
+  >(null);
+  const [selectedType, setSelectedType] = useState<
+    "base-station" | "sensor-module" | null
+  >(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
@@ -119,8 +130,49 @@ export default function MapPage() {
 
   return (
     <Layout activeTab="map" headerTitle="Map">
-      <div className="h-full w-full">
+      <div className="relative h-full w-full">
+        <div className="absolute left-0 top-0 z-10 hidden h-full w-[450px] overflow-y-auto p-4 lg:flex">
+          <div className="flex flex-col gap-4">
+            {baseStations.map((station) => (
+              <div
+                key={station.id}
+                className="transition-transform hover:scale-[1.02] hover:cursor-pointer"
+                onClick={() => {
+                  setSelectedModule(station);
+                  setSelectedType("base-station");
+                }}
+              >
+                <BaseStationCard station={station} />
+              </div>
+            ))}
+            {sensorModules.map((module) => (
+              <div
+                key={module.id}
+                className="transition-transform hover:scale-[1.02] hover:cursor-pointer"
+                onClick={() => {
+                  setSelectedModule(module);
+                  setSelectedType("sensor-module");
+                }}
+              >
+                <SensorModuleCard module={module} />
+              </div>
+            ))}
+          </div>
+        </div>
         <div ref={mapContainer} className="h-full w-full" />
+        <Dialog
+          open={!!selectedModule}
+          onOpenChange={() => setSelectedModule(null)}
+        >
+          <DialogContent className="max-w-2xl">
+            {selectedType === "base-station" && selectedModule && (
+              <BaseStationDialog baseStation={selectedModule as BaseStation} />
+            )}
+            {selectedType === "sensor-module" && selectedModule && (
+              <SensorModuleDialog module={selectedModule as SensorModule} />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

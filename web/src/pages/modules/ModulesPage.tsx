@@ -9,9 +9,11 @@ import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { toast } from "sonner";
 import SensorModuleCard from "@/components/modules/SensorModuleCard";
 import BaseStationCard from "@/components/modules/BaseStationCard";
+import { useNavigate } from "react-router-dom";
 
 export default function ModulesPage() {
   const refreshInterval = useRefreshInterval();
+  const navigate = useNavigate();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
 
@@ -42,12 +44,28 @@ export default function ModulesPage() {
 
   return (
     <Layout activeTab="modules" headerTitle="Modules">
-      <div className="grid w-full grid-cols-1 gap-4 pb-14 md:grid-cols-2">
+      <div className="grid w-full grid-cols-1 gap-4 p-8 md:grid-cols-2">
         {baseStations.map((station) => (
-          <BaseStationCard key={station.id} station={station} />
+          <div
+            key={station.id}
+            className="transition-transform hover:scale-[1.02] hover:cursor-pointer"
+            onClick={() => {
+              navigate(`/stations/${station.id}`);
+            }}
+          >
+            <BaseStationCard station={station} />
+          </div>
         ))}
         {sensorModules.map((module) => (
-          <SensorModuleCard key={module.id} module={module} />
+          <div
+            key={module.id}
+            className="transition-transform hover:scale-[1.02] hover:cursor-pointer"
+            onClick={() => {
+              navigate(`/modules/${module.id}`);
+            }}
+          >
+            <SensorModuleCard module={module} />
+          </div>
         ))}
       </div>
     </Layout>

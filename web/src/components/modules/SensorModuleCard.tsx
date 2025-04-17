@@ -17,10 +17,11 @@ import { formatDistanceToNow } from "date-fns";
 
 const SensorModuleCard = ({ module }: { module: SensorModule }) => {
   const getOnlineStatus = () => {
-    const lastPingTime = new Date(module.last_ping).getTime();
+    const lastPingTime = new Date(module.last_ping + "Z").getTime();
     const currentTime = new Date().getTime();
     const hourInMilliseconds = 60 * 60 * 1000;
-    return currentTime - lastPingTime <= hourInMilliseconds;
+    const timeDiff = currentTime - lastPingTime;
+    return timeDiff <= hourInMilliseconds;
   };
 
   return (

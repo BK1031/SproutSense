@@ -4,14 +4,14 @@ import { formatDistanceToNow } from "date-fns";
 
 const BaseStationCard = ({ baseStation }: { baseStation: BaseStation }) => {
   const getOnlineStatus = () => {
-    const lastPingTime = new Date(baseStation.last_ping).getTime();
+    const lastPingTime = new Date(baseStation.last_ping + "Z").getTime();
     const currentTime = new Date().getTime();
     const hourInMilliseconds = 60 * 60 * 1000;
     return currentTime - lastPingTime <= hourInMilliseconds;
   };
 
   return (
-    <div className="w-[300px] overflow-hidden">
+    <div className="min-w-[300px] overflow-hidden">
       <div className="rounded-t-md border-b bg-neutral-50 p-4 dark:bg-black">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

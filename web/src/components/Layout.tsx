@@ -88,10 +88,11 @@ const Layout: React.FC<LayoutProps> = ({
             }}
           />
           <div
-            className="duration-50 mt-14 p-8 transition-all"
+            className="duration-50 transition-all"
             style={{
+              marginTop: 72,
               marginLeft: sidebarWidth,
-              height: windowHeight - 56,
+              height: windowHeight - 72,
               width: windowWidth - sidebarWidth,
             }}
           >

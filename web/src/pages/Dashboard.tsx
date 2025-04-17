@@ -8,7 +8,7 @@ export default function Dashboard() {
   return (
     <>
       <Layout activeTab="dashboard" headerTitle="Dashboard">
-        <div className="flex h-full w-full flex-wrap gap-4 overflow-auto">
+        <div className="flex h-full w-full flex-wrap gap-4 overflow-auto p-8">
           <Widget
             title="Current Weather"
             icon={Leaf}
