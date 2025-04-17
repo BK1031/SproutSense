@@ -2,7 +2,6 @@ from datetime import datetime
 from ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
 from ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
 from ingest.service.sensor import save_humidity, save_latitude, save_longitude, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
-from ingest.service.stress_test import save_stress_test
 from ingest.service.log import save_mqtt_message, save_system_log
 from ingest.service.bps import save_bps
 
@@ -114,11 +113,6 @@ def handle_message(topic, payload):
         save_potassium(base_station_id, sensor_module_id, potassium, millis)
         save_latitude(base_station_id, sensor_module_id, latitude, lat_dir, millis)
         save_longitude(base_station_id, sensor_module_id, longitude, lon_dir, millis)
-        
-    elif message_id == 6:
-        sent_at = int.from_bytes(payload[7:11], byteorder='big')
-        print(f"Message generated at: {millis}, sent at: {sent_at}, latency: {sent_at - millis}")
-        save_stress_test(base_station_id, sensor_module_id, millis, sent_at)
         
     else:
         print(f"Unknown message ID: {message_id}")
