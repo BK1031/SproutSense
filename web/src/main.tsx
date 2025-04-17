@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard.tsx";
 import { ThemeProvider } from "@/components/theme-provider";
 import DebugPage from "@/pages/DebugPage";
 import ModulesPage from "@/pages/modules/ModulesPage";
+import MapPage from "@/pages/map/MapPage";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
   {
     path: "/modules",
     element: <ModulesPage />,
+  },
+  {
+    path: "/map",
+    element: <MapPage />,
   },
   {
     path: "/debug",
