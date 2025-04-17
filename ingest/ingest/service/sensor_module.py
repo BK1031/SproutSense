@@ -29,11 +29,6 @@ def get_sensor_module(id: int) -> SensorModule:
     db = get_db()
     return db.query(SensorModule).filter(SensorModule.id == id).first()
 
-def get_sensor_modules_by_base_station(bsid: int) -> list[SensorModule]:
-    """Get all sensor modules for a base station"""
-    db = get_db()
-    return db.query(SensorModule).filter(SensorModule.bsid == bsid).all()
-
 def get_all_sensor_modules() -> list[SensorModule]:
     """Get all sensor modules"""
     db = get_db()
