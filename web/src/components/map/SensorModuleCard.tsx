@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useEffect, useState } from "react";
+import { useRefreshInterval } from "@/lib/store";
 
 const SensorModuleCard = ({ module }: { module: SensorModule }) => {
   const [sensorData, setSensorData] = useState<{
@@ -26,6 +27,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
     phosphorus: 0,
     potassium: 0,
   });
+  const refreshInterval = useRefreshInterval();
 
   const getOnlineStatus = () => {
     const lastPingTime = new Date(module.last_ping).getTime();
@@ -50,7 +52,9 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
 
   useEffect(() => {
     getCurrentSensorData();
-  }, []);
+    const interval = setInterval(getCurrentSensorData, refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [refreshInterval]);
 
   return (
     <div className="w-[300px] overflow-hidden">
