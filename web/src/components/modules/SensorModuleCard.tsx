@@ -46,7 +46,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
                     )}
                     <span className="text-sm text-neutral-400">
                       Last seen{" "}
-                      {formatDistanceToNow(new Date(module.last_ping), {
+                      {formatDistanceToNow(new Date(module.last_ping + "Z"), {
                         addSuffix: true,
                       })}
                     </span>
@@ -54,7 +54,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
                   <TooltipContent>
                     <p className="text-xs">
                       Module last pinged{" "}
-                      {new Date(module.last_ping).toLocaleString()}
+                      {new Date(module.last_ping + "Z").toLocaleString()}
                     </p>
                   </TooltipContent>
                 </Tooltip>

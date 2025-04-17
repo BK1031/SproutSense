@@ -33,7 +33,7 @@ const BaseStationCard = ({ baseStation }: { baseStation: BaseStation }) => {
           <Clock className="h-3 w-3" />
           <span>
             Last updated{" "}
-            {formatDistanceToNow(new Date(baseStation.last_ping), {
+            {formatDistanceToNow(new Date(baseStation.last_ping + "Z"), {
               addSuffix: true,
             })}
           </span>

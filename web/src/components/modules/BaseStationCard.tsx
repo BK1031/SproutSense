@@ -46,7 +46,7 @@ const BaseStationCard = ({ station }: { station: BaseStation }) => {
                     )}
                     <span className="text-sm text-neutral-400">
                       Last seen{" "}
-                      {formatDistanceToNow(new Date(station.last_ping), {
+                      {formatDistanceToNow(new Date(station.last_ping + "Z"), {
                         addSuffix: true,
                       })}
                     </span>
@@ -54,7 +54,7 @@ const BaseStationCard = ({ station }: { station: BaseStation }) => {
                   <TooltipContent>
                     <p className="text-xs">
                       Base station last pinged{" "}
-                      {new Date(station.last_ping).toLocaleString()}
+                      {new Date(station.last_ping + "Z").toLocaleString()}
                     </p>
                   </TooltipContent>
                 </Tooltip>

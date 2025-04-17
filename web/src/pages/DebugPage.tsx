@@ -50,7 +50,7 @@ export default function DebugPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-neutral-400">
-                        {new Date(log.created_at).toLocaleString()}
+                        {new Date(log.created_at + "Z").toLocaleString()}
                       </span>
                     </div>
                     <code className="font-mono">{log.message}</code>
@@ -74,7 +74,7 @@ export default function DebugPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-neutral-400">
-                        {new Date(log.created_at).toLocaleString()}
+                        {new Date(log.created_at + "Z").toLocaleString()}
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-2">

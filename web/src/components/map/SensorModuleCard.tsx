@@ -139,7 +139,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Clock className="h-3 w-3" />
           <span>
             Last updated{" "}
-            {formatDistanceToNow(new Date(module.last_ping), {
+            {formatDistanceToNow(new Date(module.last_ping + "Z"), {
               addSuffix: true,
             })}
           </span>
