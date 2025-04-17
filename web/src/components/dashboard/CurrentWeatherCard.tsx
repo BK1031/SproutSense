@@ -1,11 +1,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BACKEND_URL } from "@/consts/config";
+import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
+import { useRefreshInterval } from "@/lib/store";
+import axios from "axios";
 import { Droplets, Thermometer, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function CurrentWeatherCard() {
   const [location, setLocation] = useState("Goleta, CA");
   const [temperature, setTemperature] = useState(0);
   const [humidity, setHumidity] = useState(0);
+
+  const refreshInterval = useRefreshInterval();
+
+  useEffect(() => {
+    getWeather();
+    const interval = setInterval(getWeather, refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [refreshInterval]);
+
+  const getWeather = async () => {
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/query/latest?sensors=temperature,humidity`,
+      );
+      setTemperature(response.data.temperature);
+      setHumidity(response.data.humidity);
+    } catch (error: any) {
+      toast(getAxiosErrorMessage(error));
+    }
+  };
 
   return (
     <Card className="h-full w-full">

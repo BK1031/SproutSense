@@ -10,6 +10,8 @@ import {
 import { useEffect, useState } from "react";
 import { BACKEND_URL } from "@/consts/config";
 import axios from "axios";
+import { toast } from "sonner";
+import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 
 interface SidebarProps {
   selectedPage?: string;
@@ -25,10 +27,18 @@ const Sidebar = (props: SidebarProps) => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    axios.get(`${BACKEND_URL}/ping`).then((response) => {
-      setMessage(response.data.message);
-    });
+    ping();
   }, []);
+
+  const ping = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/ping`);
+      console.log(response.data.message);
+      setMessage(response.data.message);
+    } catch (error: any) {
+      toast(getAxiosErrorMessage(error));
+    }
+  };
 
   const Header = () => {
     return (

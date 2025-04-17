@@ -6,11 +6,16 @@ import { Toaster } from "@/components/ui/sonner.tsx";
 import Dashboard from "@/pages/Dashboard.tsx";
 import { ThemeProvider } from "@/components/theme-provider";
 import DebugPage from "@/pages/DebugPage";
+import ModulesPage from "@/pages/modules/ModulesPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Dashboard />,
+  },
+  {
+    path: "/modules",
+    element: <ModulesPage />,
   },
   {
     path: "/debug",
