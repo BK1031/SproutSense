@@ -102,7 +102,10 @@ def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
     elif method == 'linear':
         df = df.interpolate(method='linear')
     elif method == 'time':
+        df['created_at'] = pd.to_datetime(df['created_at'])
+        df = df.set_index('created_at')
         df = df.interpolate(method='time')
+        df = df.reset_index()
     else:
         raise ValueError("Invalid fill method")
 

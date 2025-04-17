@@ -4,14 +4,14 @@ import os
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-ENV = os.getenv('ENV', "DEV")
-PORT = os.getenv('PORT', "5050")
+VERSION: str = "1.0.0"
+PORT: int = int(os.getenv('PORT', 5050))
 
-DATABASE_HOST = os.getenv('DATABASE_HOST')
-DATABASE_PORT = os.getenv('DATABASE_PORT')
-DATABASE_USER = os.getenv('DATABASE_USER')
-DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD')
-DATABASE_NAME = os.getenv('DATABASE_NAME')
+DATABASE_HOST: str = os.getenv('DATABASE_HOST')
+DATABASE_PORT: int = int(os.getenv('DATABASE_PORT'))
+DATABASE_USER: str = os.getenv('DATABASE_USER')
+DATABASE_PASSWORD: str = os.getenv('DATABASE_PASSWORD')
+DATABASE_NAME: str = os.getenv('DATABASE_NAME')
 
-MQTT_HOST = os.getenv('MQTT_HOST')
-MQTT_PORT = os.getenv('MQTT_PORT')
+MQTT_HOST: str = os.getenv('MQTT_HOST')
+MQTT_PORT: int = int(os.getenv('MQTT_PORT'))
