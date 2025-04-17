@@ -65,6 +65,7 @@ export default function MapPage() {
 
     // Add navigation controls
     mapInstance.addControl(new mapboxgl.NavigationControl(), "top-right");
+    mapInstance.addControl(new mapboxgl.GeolocateControl(), "top-right");
 
     map.current = mapInstance;
 
