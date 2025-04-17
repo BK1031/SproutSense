@@ -2,18 +2,22 @@ from datetime import datetime
 from ingest.service.base_station import create_base_station_if_not_exists, update_base_station_ping
 from ingest.service.sensor_module import create_sensor_module_if_not_exists, update_sensor_module_ping
 from ingest.service.sensor import save_humidity, save_latitude, save_longitude, save_lux, save_nitrogen, save_phosphorus, save_potassium, save_soil_moisture, save_temperature, get_sensor_data_by_smid_and_millis
-from ingest.service.stress_test import save_stress_test
+from ingest.service.log import save_mqtt_message, save_system_log
+from ingest.service.bps import save_bps
 
 def handle_message(topic, payload):
     print('--------------------------------')
     print(f"Received message on {topic}: {', '.join([f'0x{byte:02x}' for byte in payload])}")
+    save_mqtt_message(topic, f"{', '.join([f'0x{byte:02x}' for byte in payload])}")
         
     if len(topic.split("/")) != 2:
         print(f"Invalid topic: {topic}")
+        save_system_log(f"Invalid topic: {topic}")
         return
 
     if len(payload) < 4:
         print(f"Message not at least 4 bytes")
+        save_system_log(f"Message not at least 4 bytes: {topic}")
         return
     
     base_station_id = int(topic.split("/")[1])
@@ -23,17 +27,15 @@ def handle_message(topic, payload):
 
     if check_duplicate_message(sensor_module_id, millis):
         print(f"Duplicate message detected (skipping) Sensor Module ID: {sensor_module_id}, Millis: {millis}")
+        save_system_log(f"Duplicate message detected (skipping) Sensor Module ID: {sensor_module_id}, Millis: {millis}")
         return
-    
-    create_base_station_if_not_exists(base_station_id)
-    create_sensor_module_if_not_exists(sensor_module_id)
-    update_base_station_ping(base_station_id)
-    update_sensor_module_ping(sensor_module_id)
 
     print(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
+    save_system_log(f"Base station ID: {base_station_id}, Sensor module ID: {sensor_module_id}, Message ID: {message_id}, Millis: {millis}")
     if message_id == 1:
         if len(payload) < 13:
             print(f"Message 1 not at least 13 bytes")
+            save_system_log(f"Message 1 not at least 13 bytes: {topic}")
             return
         
         temperature = int.from_bytes(payload[7:8], byteorder='big')
@@ -48,6 +50,7 @@ def handle_message(topic, payload):
     elif message_id == 2:
         if len(payload) < 19:
             print(f"Message 2 not at least 15 bytes")
+            save_system_log(f"Message 2 not at least 15 bytes: {topic}")
             return
         
         temperature = int.from_bytes(payload[7:8], byteorder='big')
@@ -66,6 +69,7 @@ def handle_message(topic, payload):
     elif message_id == 3:
         if len(payload) < 23:
             print(f"Message 3 not at least 23 bytes")
+            save_system_log(f"Message 3 not at least 23 bytes: {topic}")
             return
         
         temperature = int.from_bytes(payload[7:8], byteorder='big')
@@ -84,6 +88,7 @@ def handle_message(topic, payload):
     elif message_id == 4:
         if len(payload) < 33:
             print(f"Message 4 not at least 33 bytes")
+            save_system_log(f"Message 4 not at least 33 bytes: {topic}")
             return
         
         temperature = int.from_bytes(payload[7:8], byteorder='big')
@@ -109,13 +114,15 @@ def handle_message(topic, payload):
         save_latitude(base_station_id, sensor_module_id, latitude, lat_dir, millis)
         save_longitude(base_station_id, sensor_module_id, longitude, lon_dir, millis)
         
-    elif message_id == 6:
-        sent_at = int.from_bytes(payload[7:11], byteorder='big')
-        print(f"Message generated at: {millis}, sent at: {sent_at}, latency: {sent_at - millis}")
-        save_stress_test(base_station_id, sensor_module_id, millis, sent_at)
-        
     else:
         print(f"Unknown message ID: {message_id}")
+        save_system_log(f"Unknown message ID: {message_id}")
+        return
+    
+    create_base_station_if_not_exists(base_station_id)
+    create_sensor_module_if_not_exists(sensor_module_id)
+    update_base_station_ping(base_station_id)
+    update_sensor_module_ping(sensor_module_id)
 
 def check_duplicate_message(sensor_module_id, millis) -> bool:
     sensor_data = get_sensor_data_by_smid_and_millis(sensor_module_id, millis)
@@ -128,11 +135,16 @@ def handle_base_station_bps(topic, payload):
     base_station_id = int(topic.split("/")[1])
     bps = float(payload.decode('utf-8').split(": ")[1])
     print(f"Base Station {base_station_id}: {bps} bps")
+    save_bps(base_station_id, bps)
+    save_system_log(f"Base Station {base_station_id}: {bps} bps")
     create_base_station_if_not_exists(base_station_id)
     update_base_station_ping(base_station_id)
     return
 
 def handle_base_station_debug(topic, payload):
     base_station_id = int(topic.split("/")[1])
-    print(f"Base Station {base_station_id} Debug: 0x{payload.hex(' ', 1)}")
+    print(f"Base Station {base_station_id} Debug: {payload.decode('utf-8')}")
+    save_system_log(f"Base Station {base_station_id} Debug: {payload.decode('utf-8')}")
+    create_base_station_if_not_exists(base_station_id)
+    update_base_station_ping(base_station_id)
     return

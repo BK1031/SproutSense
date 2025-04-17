@@ -2,29 +2,37 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
-import { Toaster } from "./components/ui/sonner.tsx";
-import App from "./pages/App.tsx";
-import Statistics from "../views/Statistics.tsx"; // Import the Statistics view
-import Map from "../views/Map.tsx"; // Import the Map view
+import { Toaster } from "@/components/ui/sonner.tsx";
+import Dashboard from "@/pages/Dashboard.tsx";
+import { ThemeProvider } from "@/components/theme-provider";
+import DebugPage from "@/pages/DebugPage";
+import ModulesPage from "@/pages/modules/ModulesPage";
+import MapPage from "@/pages/map/MapPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Dashboard />,
   },
   {
-    path: "/statistics",
-    element: <Statistics />,
+    path: "/modules",
+    element: <ModulesPage />,
   },
   {
     path: "/map",
-    element: <Map />,
+    element: <MapPage />,
+  },
+  {
+    path: "/debug",
+    element: <DebugPage />,
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
-    <Toaster />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <RouterProvider router={router} />
+      <Toaster />
+    </ThemeProvider>
   </React.StrictMode>,
 );

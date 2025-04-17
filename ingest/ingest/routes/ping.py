@@ -1,7 +1,12 @@
-from flask import Blueprint, jsonify
+from fastapi import APIRouter
 
-ping_bp = Blueprint('ping', __name__)
+from ingest.config.config import VERSION
 
-@ping_bp.route('/ping', methods=['GET'])
-def ping():
-    return jsonify({"message": "pong"})
+router = APIRouter()
+
+@router.get("/ping", tags=["Health"])
+async def ping():
+    """
+    Health check endpoint that returns a simple response to verify the service is running.
+    """
+    return {"message": f"Ingest v{VERSION} is online!"}

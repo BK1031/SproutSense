@@ -13,3 +13,6 @@ export const [
   setSelectedSensorModule,
   getSelectedSensorModule,
 ] = createStore<SensorModule>(initSensorModule());
+
+export const [useRefreshInterval, setRefreshInterval, getRefreshInterval] =
+  createStore<number>(5);
