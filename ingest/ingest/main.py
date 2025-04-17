@@ -1,6 +1,6 @@
 from ingest.database.db import init_db
 from ingest.mqtt.mqtt import init_mqtt
-from ingest.routes import ping, query
+from ingest.routes import ping, query, bps
 from ingest.service.query import query_latest_sensors
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +14,7 @@ def create_app():
     )
     app.include_router(ping.router)
     app.include_router(query.router)
+    app.include_router(bps.router)
     return app
 
 def main():
