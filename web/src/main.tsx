@@ -5,11 +5,16 @@ import "./index.css";
 import { Toaster } from "@/components/ui/sonner.tsx";
 import Dashboard from "@/pages/Dashboard.tsx";
 import { ThemeProvider } from "@/components/theme-provider";
+import DebugPage from "@/pages/DebugPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Dashboard />,
+  },
+  {
+    path: "/debug",
+    element: <DebugPage />,
   },
 ]);
 

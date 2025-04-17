@@ -5,7 +5,11 @@ import {
   SatelliteDish,
   SearchCode,
   Settings,
+  Terminal,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BACKEND_URL } from "@/consts/config";
+import axios from "axios";
 
 interface SidebarProps {
   selectedPage?: string;
@@ -18,6 +22,13 @@ interface SidebarProps {
 
 const Sidebar = (props: SidebarProps) => {
   const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    axios.get(`${BACKEND_URL}/ping`).then((response) => {
+      setMessage(response.data.message);
+    });
+  }, []);
 
   const Header = () => {
     return (
@@ -41,14 +52,12 @@ const Sidebar = (props: SidebarProps) => {
   }) => {
     return (
       <div
-        className={`mx-2 my-2 flex items-center overflow-hidden transition-all duration-150 ${
-          props.isSelected ? "bg-primary bg-[length:100%_100%] p-[2px]" : ""
-        } cursor-pointer rounded-lg`}
+        className={`mx-2 my-2 flex cursor-pointer items-center overflow-hidden rounded-lg transition-all duration-150`}
         onClick={() => navigate(props.link)}
       >
         <div
           className={`flex w-full items-center rounded-lg ${
-            props.isSelected ? "bg-green-800" : ""
+            props.isSelected ? "bg-green-700" : ""
           } h-10 p-1 hover:bg-primary/25`}
         >
           <div className="flex min-w-[60px] items-center justify-center">
@@ -83,7 +92,7 @@ const Sidebar = (props: SidebarProps) => {
           <SidebarItem
             icon={LayoutDashboard}
             text="Dashboard"
-            link={`/dashboard`}
+            link={`/`}
             isSelected={props.selectedPage === "dashboard"}
             isSidebarExpanded={props.isSidebarExpanded}
           />
@@ -109,6 +118,13 @@ const Sidebar = (props: SidebarProps) => {
             isSidebarExpanded={props.isSidebarExpanded}
           />
           <SidebarItem
+            icon={Terminal}
+            text="Debug"
+            link={`/debug`}
+            isSelected={props.selectedPage === "debug"}
+            isSidebarExpanded={props.isSidebarExpanded}
+          />
+          <SidebarItem
             icon={Settings}
             text="Settings"
             link={`/settings`}
@@ -116,7 +132,7 @@ const Sidebar = (props: SidebarProps) => {
             isSidebarExpanded={props.isSidebarExpanded}
           />
         </div>
-        <div>user</div>
+        <div className="w-full p-4 text-center text-neutral-400">{message}</div>
       </div>
     </nav>
   );

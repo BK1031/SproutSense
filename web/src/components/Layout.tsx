@@ -17,10 +17,12 @@ const Layout: React.FC<LayoutProps> = ({
   const [sidebarWidth, setSidebarWidth] = React.useState(275);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [scrollY, setScrollY] = useState(0);
 
   const handleResize = () => {
     const width = window.innerWidth;
+    const height = window.innerHeight;
 
     if (width < 768) {
       collapseSidebar();
@@ -29,6 +31,7 @@ const Layout: React.FC<LayoutProps> = ({
     }
 
     setWindowWidth(width);
+    setWindowHeight(height);
   };
 
   const scrollHandler = () => {
@@ -85,8 +88,12 @@ const Layout: React.FC<LayoutProps> = ({
             }}
           />
           <div
-            className="mt-14 p-8 transition-all duration-200"
-            style={{ marginLeft: sidebarWidth }}
+            className="duration-50 mt-14 p-8 transition-all"
+            style={{
+              marginLeft: sidebarWidth,
+              height: windowHeight - 56,
+              width: windowWidth - sidebarWidth,
+            }}
           >
             {children}
           </div>
