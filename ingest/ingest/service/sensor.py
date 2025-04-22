@@ -57,7 +57,7 @@ def save_soil_moisture(bsid, smid, value, millis):
         # out of range
         num = -1
     
-    score = num / 50
+    score = num / 50 * 100
     save_sensor_data(bsid, smid, "soil_moisture", score, millis)
 
 def save_phosphorus(bsid, smid, value, millis):
