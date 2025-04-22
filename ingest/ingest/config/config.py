@@ -4,7 +4,7 @@ import os
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-VERSION: str = "1.0.1"
+VERSION: str = "1.0.2"
 PORT: int = int(os.getenv('PORT', 5050))
 
 DATABASE_HOST: str = os.getenv('DATABASE_HOST')
