@@ -44,6 +44,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.2",
     "react-superstore": "^0.1.4",
+    "recharts": "^2.15.3",
     "sonner": "^1.7.1",
     "tailwind-animate": "^0.2.10",
     "tailwind-merge": "^2.6.0",
@@ -66,6 +67,6 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^5.4.14"
+    "vite": "^5.4.18"
   }
 }
