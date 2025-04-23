@@ -335,149 +335,165 @@ export default function QueryPage() {
           </div>
         </Card>
 
-        <div className="mb-4 flex justify-end">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <TableProperties className="mr-2 h-4 w-4" />
-                Open Data Explorer
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="h-[90vh] max-w-[90vw]">
-              <DialogHeader>
-                <DialogTitle>Data Explorer</DialogTitle>
-              </DialogHeader>
-              <div className="flex h-[calc(90vh-8rem)] gap-4">
-                <ScrollArea className="w-64 rounded-md border p-4">
-                  <div className="space-y-2">
-                    {Object.keys(chartConfig).map((moduleId) => (
-                      <Button
-                        key={moduleId}
-                        variant={
-                          selectedModule === moduleId ? "default" : "ghost"
-                        }
-                        className="w-full justify-start"
-                        onClick={() => setSelectedModule(moduleId)}
-                      >
-                        Module {moduleId}
-                      </Button>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <div className="flex-1">
-                  {selectedModule ? (
-                    <ScrollArea className="h-full">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Timestamp</TableHead>
-                            {fetchedSensors.map((sensor) => (
-                              <TableHead key={sensor}>
-                                {
-                                  SENSOR_OPTIONS.find(
-                                    (opt) => opt.value === sensor,
-                                  )?.label
-                                }
-                              </TableHead>
-                            ))}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {data
-                            .filter((item) => item.module_id === selectedModule)
-                            .map((row, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{row.local_time}</TableCell>
+        {data.length > 0 && (
+          <>
+            <div className="mb-4 flex justify-end">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <TableProperties className="mr-2 h-4 w-4" />
+                    Open Data Explorer
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="h-[90vh] max-w-[90vw]">
+                  <DialogHeader>
+                    <DialogTitle>Data Explorer</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex h-[calc(90vh-8rem)] gap-4">
+                    <ScrollArea className="w-64 rounded-md border p-4">
+                      <div className="space-y-2">
+                        {Object.keys(chartConfig).map((moduleId) => (
+                          <Button
+                            key={moduleId}
+                            variant={
+                              selectedModule === moduleId ? "default" : "ghost"
+                            }
+                            className="w-full justify-start"
+                            onClick={() => setSelectedModule(moduleId)}
+                          >
+                            Module {moduleId}
+                          </Button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    <div className="flex-1">
+                      {selectedModule ? (
+                        <ScrollArea className="h-full">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Timestamp</TableHead>
                                 {fetchedSensors.map((sensor) => (
-                                  <TableCell key={sensor}>
-                                    {row[sensor]?.toFixed(2) || "-"}
-                                  </TableCell>
+                                  <TableHead key={sensor}>
+                                    {
+                                      SENSOR_OPTIONS.find(
+                                        (opt) => opt.value === sensor,
+                                      )?.label
+                                    }
+                                  </TableHead>
                                 ))}
                               </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </ScrollArea>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground">
-                      Select a module to view data
+                            </TableHeader>
+                            <TableBody>
+                              {data
+                                .filter(
+                                  (item) => item.module_id === selectedModule,
+                                )
+                                .map((row, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{row.local_time}</TableCell>
+                                    {fetchedSensors.map((sensor) => (
+                                      <TableCell key={sensor}>
+                                        {row[sensor]?.toFixed(2) || "-"}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </ScrollArea>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                          Select a module to view data
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
-        {data.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {fetchedSensors.map((sensor) => (
-              <Card
-                key={sensor}
-                className={`relative p-6 ${expandedChart === sensor ? "md:col-span-2" : ""}`}
-              >
-                <div className="absolute right-4 top-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      setExpandedChart(expandedChart === sensor ? null : sensor)
-                    }
-                  >
-                    {expandedChart === sensor ? (
-                      <Minimize2 className="h-4 w-4" />
-                    ) : (
-                      <Maximize2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <h3 className="mb-4 text-lg font-semibold">
-                  {SENSOR_OPTIONS.find((opt) => opt.value === sensor)?.label}
-                </h3>
-                <div
-                  className={`w-full ${expandedChart === sensor ? "min-h-[60vh]" : "min-h-[30vh]"}`}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {fetchedSensors.map((sensor) => (
+                <Card
+                  key={sensor}
+                  className="relative p-6"
+                  style={{
+                    gridColumn: expandedChart === sensor ? "1 / -1" : "auto",
+                    width: expandedChart === sensor ? "100%" : "auto",
+                  }}
                 >
-                  <ChartContainer config={chartConfig}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={data}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                          dataKey="created_at"
-                          tickFormatter={(value) => formatLocalTimeShort(value)}
-                        />
-                        <YAxis />
-                        <ChartTooltip
-                          content={
-                            <ChartTooltipContent
-                              labelFormatter={(value) => formatLocalTime(value)}
-                            />
-                          }
-                        />
-                        <ChartLegend />
-                        {Object.keys(chartConfig).map((moduleId) => (
-                          <Area
-                            key={moduleId}
-                            type="monotone"
-                            dataKey={sensor}
-                            data={data.filter(
-                              (item) => item.module_id === moduleId,
-                            )}
-                            stroke={chartConfig[moduleId].color}
-                            fill={chartConfig[moduleId].color}
-                            fillOpacity={0.2}
-                            name={`Module ${moduleId}`}
+                  <div className="absolute right-4 top-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        setExpandedChart(
+                          expandedChart === sensor ? null : sensor,
+                        )
+                      }
+                    >
+                      {expandedChart === sensor ? (
+                        <Minimize2 className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <h3 className="mb-4 text-lg font-semibold">
+                    {SENSOR_OPTIONS.find((opt) => opt.value === sensor)?.label}
+                  </h3>
+                  <div
+                    style={{
+                      height: expandedChart === sensor ? "60vh" : "30vh",
+                    }}
+                  >
+                    <ChartContainer config={chartConfig}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={data}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="created_at"
+                            tickFormatter={(value) =>
+                              formatLocalTimeShort(value)
+                            }
                           />
-                        ))}
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </Card>
-            ))}
-          </div>
+                          <YAxis />
+                          <ChartTooltip
+                            content={
+                              <ChartTooltipContent
+                                labelFormatter={(value) =>
+                                  formatLocalTime(value)
+                                }
+                              />
+                            }
+                          />
+                          <ChartLegend />
+                          {Object.keys(chartConfig).map((moduleId) => (
+                            <Area
+                              key={moduleId}
+                              type="monotone"
+                              dataKey={sensor}
+                              data={data.filter(
+                                (item) => item.module_id === moduleId,
+                              )}
+                              stroke={chartConfig[moduleId].color}
+                              fill={chartConfig[moduleId].color}
+                              fillOpacity={0.2}
+                              name={`Module ${moduleId}`}
+                            />
+                          ))}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </Layout>
