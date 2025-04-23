@@ -29,8 +29,35 @@ uint8_t loraBuffer[BUFFER_SIZE];  // Changed to uint8_t for byte array
 int bufferIndex = 0;
 bool has_data = false;
 
+int lastByteReceiveTime = 0;
+
+#define MAX_SEND_DELAY 2000
+
 #define MESSAGE_END 0xFF
 #define MIN_MESSAGE_LENGTH 8
+
+// Message type definitions - add your actual message types here
+#define MESSAGE_ONE 0x01
+#define MESSAGE_TWO 0x02
+#define MESSAGE_THREE 0x03
+#define MESSAGE_FOUR 0x04
+// Add other message types as needed
+
+// Function to get expected message length based on message type (first byte)
+int getExpectedMessageLength(uint8_t messageType) {
+    switch (messageType) {
+        case MESSAGE_ONE:
+            return 13;
+        case MESSAGE_TWO:
+            return 19;
+        case MESSAGE_THREE:
+            return 23;
+        case MESSAGE_FOUR:
+            return 33;
+        default:
+            return MIN_MESSAGE_LENGTH;  // Default minimum length for unknown types
+    }
+}
 
 #define DEBUG_MODE true
 
@@ -62,6 +89,16 @@ void resetBuffer() {
         loraBuffer[i] = 0;
     }
     bufferIndex = 0;
+}
+
+int getBufferSize() {
+    int size = 0;
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+        if (loraBuffer[i] != 0) {
+            size++;
+        }
+    }
+    return size;
 }
 
 unsigned long lastCheckTime = 0;
@@ -150,6 +187,7 @@ void loop() {
     while (Serial.available() && bufferIndex < BUFFER_SIZE) {
         uint8_t incoming = Serial.read();
         byteCount++;
+        lastByteReceiveTime = millis();
         
         // Store the character
         loraBuffer[bufferIndex] = incoming;
@@ -157,15 +195,31 @@ void loop() {
 
         // Send raw byte
         // mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
+
+        if (bufferIndex == 1 && incoming == MESSAGE_END) {
+            resetBuffer();
+            mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), "initial 0xFF, reset buffer", true);
+            continue;
+        }
         
-        // Check if we got the end character and have enough data
-        if (incoming == MESSAGE_END && bufferIndex >= MIN_MESSAGE_LENGTH) {
+        // Get expected message length based on the first byte (message type)
+        int expectedLength = MIN_MESSAGE_LENGTH;
+        if (bufferIndex > 0) {
+            expectedLength = getExpectedMessageLength(loraBuffer[0]);
+            // mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), ("expecting length: " + String(expectedLength)).c_str(), true);
+        }
+        
+        // Check if we've reached the expected length AND found the end marker
+        if (incoming == MESSAGE_END && bufferIndex >= expectedLength) {
+            // Only consider it a complete message if we've reached the expected length
+            mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), "reached expected length, publishing data", true);
             has_data = true;
             break;
         }
 
         // buffer overflow, clear and take the data loss
         if (bufferIndex >= BUFFER_SIZE) {
+            mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), "buffer overflow, reset buffer", true);
             resetBuffer();
             has_data = false;
         }
@@ -179,6 +233,14 @@ void loop() {
         uint8_t response[5] = {'1', '2', '3', '4', '5'};
         Serial.write(response, 5);
     }
+
+    // If no data has been received for a while and buffer is not empty (partial or pending message), reset the buffer
+    int buffer_size = getBufferSize();
+    if (buffer_size > 0 && millis() - lastByteReceiveTime >= MAX_SEND_DELAY) {
+        resetBuffer();
+        mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), ("non-empty buffer (" + String(buffer_size) + " bytes) timeout, reset buffer").c_str(), true);
+    }
+    
 
     updateRollingBPS();
     

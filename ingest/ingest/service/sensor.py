@@ -57,7 +57,7 @@ def save_soil_moisture(bsid, smid, value, millis):
         # out of range
         num = -1
     
-    score = num / 50
+    score = num / 50 * 100
     save_sensor_data(bsid, smid, "soil_moisture", score, millis)
 
 def save_phosphorus(bsid, smid, value, millis):
@@ -99,7 +99,7 @@ def save_sensor_data(bsid, smid, name, value, millis):
     model.name = name
     model.value = value
     model.millis = millis
-    model.created_at = datetime.datetime.now()
+    model.created_at = datetime.datetime.now(datetime.timezone.utc)
     db.add(model)
     db.commit()
 
@@ -132,5 +132,3 @@ def get_all_sensor_data() -> list[Sensor]:
     """Get all sensor data"""
     db = get_db()
     return db.query(Sensor).all()
-
-# filter by most recent time and sensord data and sensor module

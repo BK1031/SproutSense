@@ -8,7 +8,7 @@ from ingest.config.config import (
     DATABASE_NAME
 )
 from ingest.models.base import Base
-from ingest.models import base_station, sensor, sensor_module, stress_test
+from ingest.models import base_station, sensor, sensor_module, log, bps
 
 DATABASE_URL = f"postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 
@@ -28,7 +28,12 @@ def init_db():
         raise ValueError("DATABASE_NAME is not set")
     else:
         global db_session
-        engine = create_engine(DATABASE_URL)
+        engine = create_engine(
+            DATABASE_URL,
+            connect_args={
+                'options': '-c timezone=UTC'
+            }
+        )
         db_session = scoped_session(
             sessionmaker(
                 autocommit=False,

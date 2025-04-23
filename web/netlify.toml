@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/api/*"
+  to = "http://hamilton-ec2.gauchoracing.com:5050/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
