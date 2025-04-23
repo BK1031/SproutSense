@@ -39,6 +39,16 @@ import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import Layout from "@/components/Layout";
 import { format, parseISO } from "date-fns";
 import { useSearchParams } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { X, TableProperties, Maximize2, Minimize2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SENSOR_OPTIONS = [
   { value: "temperature", label: "Temperature" },
@@ -76,8 +86,8 @@ export default function QueryPage() {
   const [moduleIds, setModuleIds] = useState<string>(
     searchParams.get("modules") || "",
   );
-  const [selectedSensor, setSelectedSensor] = useState<string>(
-    searchParams.get("sensor") || "",
+  const [selectedSensors, setSelectedSensors] = useState<string[]>(
+    searchParams.get("sensors")?.split(",") || [],
   );
   const [startTime, setStartTime] = useState<string>(
     searchParams.get("start") || "",
@@ -88,35 +98,9 @@ export default function QueryPage() {
   );
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
-  // Update URL params when configuration changes
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (moduleIds) params.set("modules", moduleIds);
-    if (selectedSensor) params.set("sensor", selectedSensor);
-    if (startTime) params.set("start", startTime);
-    if (endTime) params.set("end", endTime);
-    if (fillMethod) params.set("fill", fillMethod);
-
-    // Only update URL if we have at least one parameter
-    if (params.toString()) {
-      setSearchParams(params);
-    }
-  }, [
-    moduleIds,
-    selectedSensor,
-    startTime,
-    endTime,
-    fillMethod,
-    setSearchParams,
-  ]);
-
-  // Fetch data when component mounts if we have required parameters
-  useEffect(() => {
-    if (moduleIds && selectedSensor) {
-      fetchData();
-    }
-  }, []); // Only run on mount
+  const [fetchedSensors, setFetchedSensors] = useState<string[]>([]);
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
 
   const convertToUTC = (localDateTime: string) => {
     if (!localDateTime) return "";
@@ -136,9 +120,18 @@ export default function QueryPage() {
     return format(parseISO(timeWithZ), "M/d h:mm a");
   };
 
+  // Fetch data on page load if URL parameters are present
+  useEffect(() => {
+    const hasParams =
+      searchParams.has("modules") && searchParams.has("sensors");
+    if (hasParams) {
+      fetchData();
+    }
+  }, []); // Only run on mount
+
   const fetchData = async () => {
-    if (!moduleIds || !selectedSensor) {
-      toast.error("Please enter module IDs and select a sensor");
+    if (!moduleIds || selectedSensors.length === 0) {
+      toast.error("Please enter module IDs and select at least one sensor");
       return;
     }
 
@@ -148,13 +141,23 @@ export default function QueryPage() {
       return;
     }
 
+    // Update URL parameters when fetching
+    const params = new URLSearchParams();
+    if (moduleIds) params.set("modules", moduleIds);
+    if (selectedSensors.length > 0)
+      params.set("sensors", selectedSensors.join(","));
+    if (startTime) params.set("start", startTime);
+    if (endTime) params.set("end", endTime);
+    if (fillMethod) params.set("fill", fillMethod);
+    setSearchParams(params);
+
     setLoading(true);
     try {
       const allData = await Promise.all(
         ids.map(async (smid, index) => {
           const params = new URLSearchParams({
             smid,
-            sensors: selectedSensor,
+            sensors: selectedSensors.join(","),
             fill: fillMethod,
           });
 
@@ -186,6 +189,7 @@ export default function QueryPage() {
         );
 
       setData(mergedData);
+      setFetchedSensors([...selectedSensors]);
     } catch (error) {
       toast.error(getAxiosErrorMessage(error));
     } finally {
@@ -222,15 +226,70 @@ export default function QueryPage() {
             </div>
             <div className="space-y-2">
               <Label>Sensor</Label>
-              <Select value={selectedSensor} onValueChange={setSelectedSensor}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sensor" />
+              <Select
+                value={selectedSensors.join(",")}
+                onValueChange={(value) =>
+                  setSelectedSensors(value ? value.split(",") : [])
+                }
+              >
+                <SelectTrigger className="flex h-auto min-h-[2.5rem] flex-wrap gap-2">
+                  {selectedSensors.length === 0 ? (
+                    <SelectValue placeholder="Select sensors" />
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSensors.map((sensor) => (
+                        <div
+                          key={sensor}
+                          className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-sm"
+                        >
+                          <span className="whitespace-nowrap">
+                            {
+                              SENSOR_OPTIONS.find((opt) => opt.value === sensor)
+                                ?.label
+                            }
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedSensors(
+                                selectedSensors.filter((v) => v !== sensor),
+                              );
+                            }}
+                            className="ml-1 rounded-full p-0.5 hover:bg-primary/20"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {SENSOR_OPTIONS.map((sensor) => (
-                    <SelectItem key={sensor.value} value={sensor.value}>
-                      {sensor.label}
-                    </SelectItem>
+                    <div
+                      key={sensor.value}
+                      className="flex items-center space-x-2 p-2"
+                    >
+                      <Checkbox
+                        id={sensor.value}
+                        checked={selectedSensors.includes(sensor.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedSensors([
+                              ...selectedSensors,
+                              sensor.value,
+                            ]);
+                          } else {
+                            setSelectedSensors(
+                              selectedSensors.filter((v) => v !== sensor.value),
+                            );
+                          }
+                        }}
+                      />
+                      <Label htmlFor={sensor.value}>{sensor.label}</Label>
+                    </div>
                   ))}
                 </SelectContent>
               </Select>
@@ -276,77 +335,149 @@ export default function QueryPage() {
           </div>
         </Card>
 
-        {data.length > 0 && (
-          <>
-            <Card className="p-6">
-              <div className="min-h-[50vh] w-full">
-                <ChartContainer config={chartConfig}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={data}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="created_at"
-                        tickFormatter={(value) => formatLocalTimeShort(value)}
-                      />
-                      <YAxis />
-                      <ChartTooltip
-                        content={
-                          <ChartTooltipContent
-                            labelFormatter={(value) => formatLocalTime(value)}
-                          />
+        <div className="mb-4 flex justify-end">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <TableProperties className="mr-2 h-4 w-4" />
+                Open Data Explorer
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="h-[90vh] max-w-[90vw]">
+              <DialogHeader>
+                <DialogTitle>Data Explorer</DialogTitle>
+              </DialogHeader>
+              <div className="flex h-[calc(90vh-8rem)] gap-4">
+                <ScrollArea className="w-64 rounded-md border p-4">
+                  <div className="space-y-2">
+                    {Object.keys(chartConfig).map((moduleId) => (
+                      <Button
+                        key={moduleId}
+                        variant={
+                          selectedModule === moduleId ? "default" : "ghost"
                         }
-                      />
-                      <ChartLegend />
-                      {Object.keys(chartConfig).map((moduleId) => (
-                        <Area
-                          key={moduleId}
-                          type="monotone"
-                          dataKey={selectedSensor}
-                          data={data.filter(
-                            (item) => item.module_id === moduleId,
-                          )}
-                          stroke={chartConfig[moduleId].color}
-                          fill={chartConfig[moduleId].color}
-                          fillOpacity={0.2}
-                          name={`Module ${moduleId}`}
-                        />
-                      ))}
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                        className="w-full justify-start"
+                        onClick={() => setSelectedModule(moduleId)}
+                      >
+                        Module {moduleId}
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <div className="flex-1">
+                  {selectedModule ? (
+                    <ScrollArea className="h-full">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Timestamp</TableHead>
+                            {fetchedSensors.map((sensor) => (
+                              <TableHead key={sensor}>
+                                {
+                                  SENSOR_OPTIONS.find(
+                                    (opt) => opt.value === sensor,
+                                  )?.label
+                                }
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {data
+                            .filter((item) => item.module_id === selectedModule)
+                            .map((row, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{row.local_time}</TableCell>
+                                {fetchedSensors.map((sensor) => (
+                                  <TableCell key={sensor}>
+                                    {row[sensor]?.toFixed(2) || "-"}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      Select a module to view data
+                    </div>
+                  )}
+                </div>
               </div>
-            </Card>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-            <Card className="p-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Module ID</TableHead>
-                    <TableHead>
-                      {
-                        SENSOR_OPTIONS.find(
-                          (opt) => opt.value === selectedSensor,
-                        )?.label
-                      }
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{row.local_time}</TableCell>
-                      <TableCell>{row.module_id}</TableCell>
-                      <TableCell>{row[selectedSensor]}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </>
+        {data.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {fetchedSensors.map((sensor) => (
+              <Card
+                key={sensor}
+                className={`relative p-6 ${expandedChart === sensor ? "md:col-span-2" : ""}`}
+              >
+                <div className="absolute right-4 top-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setExpandedChart(expandedChart === sensor ? null : sensor)
+                    }
+                  >
+                    {expandedChart === sensor ? (
+                      <Minimize2 className="h-4 w-4" />
+                    ) : (
+                      <Maximize2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <h3 className="mb-4 text-lg font-semibold">
+                  {SENSOR_OPTIONS.find((opt) => opt.value === sensor)?.label}
+                </h3>
+                <div
+                  className={`w-full ${expandedChart === sensor ? "min-h-[60vh]" : "min-h-[30vh]"}`}
+                >
+                  <ChartContainer config={chartConfig}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={data}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="created_at"
+                          tickFormatter={(value) => formatLocalTimeShort(value)}
+                        />
+                        <YAxis />
+                        <ChartTooltip
+                          content={
+                            <ChartTooltipContent
+                              labelFormatter={(value) => formatLocalTime(value)}
+                            />
+                          }
+                        />
+                        <ChartLegend />
+                        {Object.keys(chartConfig).map((moduleId) => (
+                          <Area
+                            key={moduleId}
+                            type="monotone"
+                            dataKey={sensor}
+                            data={data.filter(
+                              (item) => item.module_id === moduleId,
+                            )}
+                            stroke={chartConfig[moduleId].color}
+                            fill={chartConfig[moduleId].color}
+                            fillOpacity={0.2}
+                            name={`Module ${moduleId}`}
+                          />
+                        ))}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </Layout>
