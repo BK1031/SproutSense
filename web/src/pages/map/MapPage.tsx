@@ -164,7 +164,7 @@ export default function MapPage() {
           open={!!selectedModule}
           onOpenChange={() => setSelectedModule(null)}
         >
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl p-0">
             {selectedType === "base-station" && selectedModule && (
               <BaseStationDialog baseStation={selectedModule as BaseStation} />
             )}

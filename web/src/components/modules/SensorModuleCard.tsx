@@ -68,14 +68,20 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Card className="w-min border-none bg-green-500 px-[6px] py-[3px] text-center dark:bg-green-500/60">
+                  <Card
+                    className={`w-min border-none px-[6px] py-[3px] text-center ${getOnlineStatus() ? "bg-green-500 dark:bg-green-500/60" : "bg-neutral-400 dark:bg-neutral-400/60"}`}
+                  >
                     <div className="flex items-center gap-1">
                       <LocateFixed className="h-4 w-4 text-white" />
                     </div>
                   </Card>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">GPS location active</p>
+                  <p className="text-xs">
+                    {getOnlineStatus()
+                      ? "GPS location active"
+                      : "Module offline, GPS location may not be accurate"}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -83,15 +89,20 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Card className="w-min border-none bg-yellow-500 px-[6px] py-[3px] text-center dark:bg-yellow-500/60">
+                  <Card
+                    className={`w-min border-none px-[6px] py-[3px] text-center ${getOnlineStatus() ? "bg-yellow-500 dark:bg-yellow-500/60" : "bg-neutral-400 dark:bg-neutral-400/60"}`}
+                  >
                     <div className="flex items-center gap-1">
                       <LocateOff className="h-4 w-4 text-white" />
-                      <span className="text-xs text-white">Unavailable</span>
                     </div>
                   </Card>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">GPS location unavailable</p>
+                  <p className="text-xs">
+                    {getOnlineStatus()
+                      ? "GPS location unavailable"
+                      : "Module offline, GPS location unavailable"}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
