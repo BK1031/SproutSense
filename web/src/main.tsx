@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import DebugPage from "@/pages/DebugPage";
 import ModulesPage from "@/pages/modules/ModulesPage";
 import MapPage from "@/pages/map/MapPage";
-
+import QueryPage from "@/pages/query/QueryPage";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -21,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: "/map",
     element: <MapPage />,
+  },
+  {
+    path: "/query",
+    element: <QueryPage />,
   },
   {
     path: "/debug",
