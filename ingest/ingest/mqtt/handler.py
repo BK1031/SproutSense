@@ -127,7 +127,9 @@ def handle_message(topic, payload):
 def check_duplicate_message(sensor_module_id, millis) -> bool:
     sensor_data = get_sensor_data_by_smid_and_millis(sensor_module_id, millis)
     if sensor_data:
-        if sensor_data.created_at.timestamp() > datetime.now().timestamp() - 5:
+        now = datetime.now().timestamp()
+        created = sensor_data.created_at.timestamp()
+        if now - 5 <= created <= now:
             return True
     return False
 
