@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { CurrentBPSCard } from "@/components/dashboard/CurrentBPSCard";
+import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf } from "lucide-react";
 
@@ -24,6 +25,14 @@ export default function Dashboard() {
             height="200px"
           >
             <CurrentBPSCard />
+          </Widget>
+          <Widget
+            title="Current NPK"
+            icon={Leaf}
+            width="300px"
+            height="200px"
+          >
+            <CurrentNPKCard />
           </Widget>
           <Widget
             title="Current Weather"

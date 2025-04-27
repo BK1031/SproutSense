@@ -130,7 +130,6 @@ def query_latest_average_sensors(sensors: list[str]) -> pd.DataFrame:
     merged = merged.groupby('created_at').mean().reset_index()
     return merged
 
-    
 
 def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
     """
