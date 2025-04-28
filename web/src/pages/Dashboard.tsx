@@ -26,12 +26,7 @@ export default function Dashboard() {
           >
             <CurrentBPSCard />
           </Widget>
-          <Widget
-            title="Current NPK"
-            icon={Leaf}
-            width="300px"
-            height="200px"
-          >
+          <Widget title="Current NPK" icon={Leaf} width="300px" height="200px">
             <CurrentNPKCard />
           </Widget>
           <Widget
