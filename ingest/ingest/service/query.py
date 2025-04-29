@@ -152,6 +152,10 @@ def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
     df = df.reset_index(drop=True)
 
     if method == 'ffill':
+        if df.iloc[0].isna().any():
+            print("there are nans in the first row")
+            first_row = df.iloc[0].fillna(0)
+            df.iloc[0] = first_row
         df = df.ffill()
     elif method == 'bfill':
         df = df.bfill()
@@ -246,11 +250,15 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
     for col, count in nan_stats.items():
         print(f"{col}: {count} NaNs ({count/len(merged)*100:.2f}%)")
 
+    print("prior to fill_nan")
     merged = fill_nan(merged, fill)
+    print(f"merged {merged}")
     merged = merged.sort_values(by='created_at')
     merged = merged.reset_index(drop=True)
 
     # Round created_at to nearest second
     merged['created_at'] = merged['created_at'].dt.round('s')
+
+    print(f"the merged we return {merged}")
     
     return merged

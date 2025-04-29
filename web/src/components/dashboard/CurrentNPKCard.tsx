@@ -174,7 +174,7 @@ export function CurrentNPKCard() {
   const getNPK = async () => {
     try {
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=nitrogen,phosphorus,potassium`,
+        `${BACKEND_URL}/query/historic?sensors=nitrogen,phosphorus,potassium`,
       );
       setNitrogen(response.data.nitrogen);
       setPhosphorus(response.data.phosphorus);
@@ -183,6 +183,18 @@ export function CurrentNPKCard() {
       toast(getAxiosErrorMessage(error));
     }
   };
+//   const getHistoricalN = async () => {
+//     try {
+//       const response = await axios.get(
+//         `${BACKEND_URL}/query/historic?sensors=nitrogen,phosphorus,potassium`,
+//       );
+//       setNitrogen(response.data.nitrogen);
+//       setPhosphorus(response.data.phosphorus);
+//       setPotassium(response.data.potassium);
+//     } catch (error: any) {
+//       toast(getAxiosErrorMessage(error));
+//     }
+//   };
 
   return (
     <>
