@@ -78,12 +78,16 @@ def handle_message(topic, payload):
         lux_1 = int.from_bytes(payload[11:13], byteorder='big')
         nitrogen = int.from_bytes(payload[13:15], byteorder='big')
         soil_moisture = int.from_bytes(payload[15:19], byteorder='big')
+        phosphorus = int.from_bytes(payload[19:21], byteorder='big')
+        potassium = int.from_bytes(payload[21:23], byteorder='big')
 
         save_temperature(base_station_id, sensor_module_id, temperature, millis)
         save_humidity(base_station_id, sensor_module_id, humidity, millis)
         save_lux(base_station_id, sensor_module_id, lux_0, lux_1, millis)
         save_nitrogen(base_station_id, sensor_module_id, nitrogen, millis)
         save_soil_moisture(base_station_id, sensor_module_id, soil_moisture, millis)
+        save_phosphorus(base_station_id, sensor_module_id, phosphorus, millis)
+        save_potassium(base_station_id, sensor_module_id, potassium, millis)
     
     elif message_id == 4:
         if len(payload) < 33:
