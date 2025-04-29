@@ -73,7 +73,6 @@ async def get_historic_sensors(smid: int = None, sensors: str = None, start: str
     if not smid or not sensors:
         raise HTTPException(status_code=400, detail="query parameters smid and sensors are required")
     
-    
     try:
         sensor_list = sensors.split(",")
         result = query_sensors(smid, sensor_list, start, end)
