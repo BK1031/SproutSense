@@ -69,8 +69,8 @@ export function AIRecommendationCard() {
   return (
     <Card className="h-full w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex flex-row items-center gap-2">
-          <Bot className="h-5 w-5 text-muted-foreground" />
+				<CardTitle className="flex flex-row items-center gap-2">
+					<Bot className="h-5 w-5 text-muted-foreground" />
           <span className="text-xl font-semibold">AI Recommendation</span>
         </CardTitle>
         <Button
