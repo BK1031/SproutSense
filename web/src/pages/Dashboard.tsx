@@ -3,6 +3,7 @@ import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { CurrentBPSCard } from "@/components/dashboard/CurrentBPSCard";
 import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
 import { CurrentSoilMoistureCard } from "@/components/dashboard/CurrentSoilMoistureCard";
+import { AIRecommendationCard } from "@/components/dashboard/AiRecommendationCard";
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf, Droplets } from "lucide-react";
 
@@ -34,12 +35,12 @@ export default function Dashboard() {
             <CurrentSoilMoistureCard/>
           </Widget>
           <Widget
-            title="Current Weather"
+            title="AI Watering Recommendation"
             icon={Leaf}
-            width="300px"
-            height="500px"
+            width="350px"
+            height="250px"
           >
-            <div className="h-full w-full bg-sky-300">300x500</div>
+            <AIRecommendationCard />
           </Widget>
           <Widget
             title="Current Weather"

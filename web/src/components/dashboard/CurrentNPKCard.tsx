@@ -25,7 +25,6 @@ import axios from "axios";
 import { Sprout, Menu, Maximize2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { GraphToggle } from "../ToggleGroup";
 import { NumberDomain } from "recharts/types/util/types";
 
 const chartData = [
