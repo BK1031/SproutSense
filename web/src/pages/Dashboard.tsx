@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { CurrentBPSCard } from "@/components/dashboard/CurrentBPSCard";
 import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
+import { AIRecommendationCard } from "@/components/dashboard/AiRecommendationCard";
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf } from "lucide-react";
 
@@ -38,12 +39,12 @@ export default function Dashboard() {
             <div className="h-full w-full bg-sky-300">300x200</div>
           </Widget>
           <Widget
-            title="Current Weather"
+            title="AI Watering Recommendation"
             icon={Leaf}
-            width="300px"
-            height="500px"
+            width="350px"
+            height="250px"
           >
-            <div className="h-full w-full bg-sky-300">300x500</div>
+            <AIRecommendationCard />
           </Widget>
           <Widget
             title="Current Weather"
