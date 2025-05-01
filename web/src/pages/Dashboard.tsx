@@ -2,8 +2,9 @@ import Layout from "@/components/Layout";
 import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { CurrentBPSCard } from "@/components/dashboard/CurrentBPSCard";
 import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
+import { CurrentSoilMoistureCard } from "@/components/dashboard/CurrentSoilMoistureCard";
 import { Widget } from "@/components/dashboard/Widget";
-import { Leaf } from "lucide-react";
+import { Leaf, Droplets } from "lucide-react";
 
 export default function Dashboard() {
   return (
@@ -29,13 +30,8 @@ export default function Dashboard() {
           <Widget title="Current NPK" icon={Leaf} width="300px" height="200px">
             <CurrentNPKCard />
           </Widget>
-          <Widget
-            title="Current Weather"
-            icon={Leaf}
-            width="350px"
-            height="200px"
-          >
-            <div className="h-full w-full bg-sky-300">300x200</div>
+          <Widget title="Current Soil Moisture" icon={Droplets} width="300px" height="200px">
+            <CurrentSoilMoistureCard/>
           </Widget>
           <Widget
             title="Current Weather"

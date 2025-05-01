@@ -258,7 +258,5 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
 
     # Round created_at to nearest second
     merged['created_at'] = merged['created_at'].dt.round('s')
-
-    print(f"the merged we return {merged}")
     
     return merged
