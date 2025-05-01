@@ -57,6 +57,7 @@ def extract_weather_features(forecast_data):
     }
 
 def predict(moisture: float, temp: float, latitude: float, longitude: float, api_key: str):
+    print("Inside predict function")
     forecast_data = get_weather_forecast(latitude, longitude, api_key)
     weather = extract_weather_features(forecast_data)
 

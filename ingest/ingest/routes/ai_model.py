@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from ai import service
+import ingest.ai.watering_prediction as watering_prediction
 
 router = APIRouter(
     prefix="/ai",
@@ -17,7 +17,7 @@ class PredictionRequest(BaseModel):
 @router.post("/predict")
 async def predict_irrigation(request: PredictionRequest):
     try:
-        result = service.predict(
+        result = watering_prediction.predict(
             moisture=request.moisture,
             temp=request.temp,
             latitude=request.latitude,

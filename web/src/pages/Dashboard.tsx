@@ -31,7 +31,7 @@ export default function Dashboard() {
     } catch (error) {
       const errorMessage = getAxiosErrorMessage(error);
       console.error("Error fetching prediction:", errorMessage);
-      setRecommendation("Error fetching prediction");
+      setRecommendation("Error fetching prediction: " + errorMessage);
     }
   };
   
