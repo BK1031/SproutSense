@@ -6,10 +6,7 @@ import { AIRecommendationCard } from "@/components/dashboard/AiRecommendationCar
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf } from "lucide-react";
 
-
-
 export default function Dashboard() {
-
   return (
     <>
       <Layout activeTab="dashboard" headerTitle="Dashboard">
