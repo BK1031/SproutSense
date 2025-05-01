@@ -134,9 +134,6 @@ def get_all_sensor_data() -> list[Sensor]:
     return db.query(Sensor).all()
 
 def get_average_sensor_value_for_day(sensor_name: str, start_of_day: datetime) -> float:
-    from ingest.database.db import get_db
-    from ingest.models.sensor import Sensor
-
     db = get_db()
     end_of_day = start_of_day + timedelta(days=1)
 
