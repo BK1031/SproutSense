@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 from ingest.service.sensor_module import update_sensor_module
 from ingest.models.sensor import Sensor
 from ingest.database.db import get_db
@@ -132,3 +132,24 @@ def get_all_sensor_data() -> list[Sensor]:
     """Get all sensor data"""
     db = get_db()
     return db.query(Sensor).all()
+
+def get_average_sensor_value_for_day(sensor_name: str, start_of_day: datetime) -> float:
+    from ingest.database.db import get_db
+    from ingest.models.sensor import Sensor
+
+    db = get_db()
+    end_of_day = start_of_day + timedelta(days=1)
+
+    records = (
+        db.query(Sensor)
+        .filter(Sensor.name == sensor_name)
+        .filter(Sensor.created_at >= start_of_day)
+        .filter(Sensor.created_at < end_of_day)
+        .all()
+    )
+
+    values = [r.value for r in records if r.value is not None]
+    if not values:
+        return 0.0
+
+    return sum(values) / len(values)

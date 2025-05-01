@@ -1,70 +1,59 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot } from "lucide-react";
 import { BACKEND_URL, OPENWEATHER_API_KEY } from "@/consts/config";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Droplets, Thermometer} from "lucide-react";
+import { Droplets, Thermometer, Bot} from "lucide-react";
 
 export function AIRecommendationCard() {
-  const [data, setData] = useState<any[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 	const [avgMoisture, setAvgMoisture] = useState<number | null>(null);
 	const [avgTemperature, setAvgTemperature] = useState<number | null>(null);
+	const [displayDate, setDisplayDate] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_URL}/query/historic`);
-        setData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", getAxiosErrorMessage(error));
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const calculateAverage = (sensorType: string): number => {
-
-		// const yesterday = new Date();
-		// yesterday.setDate(yesterday.getDate() - 1);
-		// const yDate = yesterday.toISOString().split("T")[0];
-		const yDate = "2025-04-08";
-		
-		const values = data
-			.filter((item) => {
-				const timestamp = item.created_at;
-				if (!timestamp) return false;
-	
-				const itemDate = new Date(timestamp).toISOString().split("T")[0];
-				return itemDate === yDate;
-			})
-			.map((item) => item[sensorType])
-			.filter((val) => val !== undefined);
-	
-		if (values.length === 0) return 0;
-		return values.reduce((acc, val) => acc + val, 0) / values.length;
-	};
 
   const fetchPrediction = async () => {
-    const avgMoisture = calculateAverage("soil_moisture");
-    const avgTemperature = calculateAverage("temperature");
-		// setAvgMoisture(avgMoisture);
-		// setAvgTemperature(avgTemperature);
-		// uncomment and comment the above lines to use the calculated values vs the hardcoded ones
-		setAvgMoisture(600);
-		setAvgTemperature(25);
-	
+		let avgMoisture = null;
+		let avgTemperature = null;
+		try {
+			//these lines are used to get the date of yesterday
+			const yesterday = new Date();
+			yesterday.setDate(yesterday.getDate() - 1);
+			const yDate = yesterday.toISOString().split("T")[0]; //"2025-04-30"
+
+
+			const parts = yDate.split("-");
+			const formatted = `${parts[1]}-${parts[2]}-${parts[0]}`; // MM-DD-YYYY
+			setDisplayDate(formatted);
+			
+			// Fetch averages from /ai/avg
+			const avgResponse= await axios.get(`${BACKEND_URL}/ai/avg`, {
+				params: { day: yDate },
+			});
+			avgMoisture = avgResponse.data.avg_moisture;
+			avgTemperature = avgResponse.data.avg_temp;
+			setAvgMoisture(avgMoisture);
+			setAvgTemperature(avgTemperature);
+		} catch (error) {
+			console.error("Failed to fetch averages from /ai/avg:", getAxiosErrorMessage(error));
+			setRecommendation("Error: Failed to fetch sensor averages.");
+			setLoading(false);
+			return; // exit early to avoid making prediction request with bad data
+		}
+
+		setLoading(true);
     try {
-      setLoading(true);
+			// 1. Fetch base station info (assuming ID = 1)
+			const baseRes = await axios.get(`${BACKEND_URL}/base-station/2`);
+			const { latitude, longitude } = baseRes.data;
+
       const response = await axios.post(`${BACKEND_URL}/ai/predict`, {
         moisture: avgMoisture,
         temp: avgTemperature,
-        latitude: 34.0522,
-        longitude: -118.2437,
+        latitude: latitude,
+        longitude: longitude,
         api_key: OPENWEATHER_API_KEY,
       });
 
@@ -111,7 +100,7 @@ export function AIRecommendationCard() {
 								<div>
 									<span className="text-sm font-medium text-foreground">Moisture</span>
 									<p className="text-xs text-muted-foreground">
-										Avg from {new Date("2025-04-08").toLocaleDateString()}
+										Avg from {displayDate}
 									</p>
 								</div>
 							</div>
@@ -127,7 +116,7 @@ export function AIRecommendationCard() {
 								<div>
 									<span className="text-sm font-medium text-foreground">Temperature</span>
 									<p className="text-xs text-muted-foreground">
-										Avg from {new Date("2025-04-08").toLocaleDateString()}
+										Avg from {displayDate}
 									</p>
 								</div>
 							</div>
