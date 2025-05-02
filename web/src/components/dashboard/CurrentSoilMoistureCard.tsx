@@ -40,17 +40,17 @@ interface SoilMoisture {
     soil_moisture: number
 }
 
-interface ChartDataDaily {
-    soil_moisture: number,
+interface ChartData {
+    soilMoisture: number,
     created_at : string,
     label: string,
     timestamp: Date
 }
 
 const chartConfig = {
-    SoilMoisture: {
+    soilMoisture: {
       label: "Soil Moisture",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(210, 100%, 50%)",
     }
 
   } satisfies ChartConfig;
@@ -61,37 +61,215 @@ export function CurrentSoilMoistureCard() {
   const [selectedView, setSelectedView] = useState("averages");
   const [expanded, setExpanded] = useState(false);
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
-  const [module, setModule] = useState<string | undefined>();
+  const [module, setModule] = useState<string | undefined>("4");
   const [soilMoistureById, setSoilMoistureById] = useState<string | undefined>();
   const [graphFilter, setGraphFilter] = useState<string |undefined>("day");
-  const [chartDataDaily, setChartDataDaily] = useState<ChartDataDaily[]>([]);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
 
   const refreshInterval = useRefreshInterval();
 
-  const processData = (data: SoilMoisture[]) => {
-    let graphData = data.map(item => {
+  const padGroupedData = (data: Map<number, number[]>, filter:any) => {
+        if (filter === "year") {
+            if (!data.has(0)) {
+                data.set(0, [0]);
+            }
+        } else if (filter === "day") {
+            if (!data.has(0)) {
+                data.set(0, [0]);
+            }            
+        } else if (filter === "week") {
+            const currentDay = new Date();
+            const startDay = new Date();
+            startDay.setDate(currentDay.getDate() - 7);
+            if (!data.has(startDay.getDate())) {
+                data.set(startDay.getDate(), [0]);
+            }                
+        } else if (filter === "month") {
+            const currentDay = new Date();
+            const startDay = new Date();
+            startDay.setDate(currentDay.getDate() - 30);
+            if (!data.has(startDay.getDate())) {
+                data.set(startDay.getDate(), [0]);
+            }   
+        }
+
+        return data;
+  }
+
+  const groupData = (data: SoilMoisture[], filter:any) => {
+    const groupedDataByFilter = new Map<number, number[]>();
+
+    data.forEach(item => {
         const date = new Date(item.created_at + 'Z');
-        const pstTime = date.toLocaleString('en-US', {
-            timeZone: 'America/Los_Angeles',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
+        let keyByFilter;
+        if (filter === "day") {
+            keyByFilter = date.getHours();
 
-        });
+            if (!groupedDataByFilter.has(keyByFilter)) {
+                groupedDataByFilter.set(keyByFilter, []);
+            }
+            groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);
+        } else if (filter === "week" || filter === "month") {
+            keyByFilter = date.getDate();
 
+            if (!groupedDataByFilter.has(keyByFilter)) {
+                groupedDataByFilter.set(keyByFilter, []);
+            }
+            groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);
+        } else if (filter === "year") {
+            keyByFilter = date.getMonth();
 
-        return {
-            soil_moisture: item.soil_moisture,
-            created_at : item.created_at,
-            label: pstTime,
-            timestamp: date
-        } satisfies ChartDataDaily
+            if (!groupedDataByFilter.has(keyByFilter)) {
+                groupedDataByFilter.set(keyByFilter, []);
+            }
+            groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);            
+        }
     })
 
-    graphData.sort((a,b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+
+    return padGroupedData(groupedDataByFilter, filter);
+  }
+
+  const processData = (data: SoilMoisture[]) => {
+    let endHour;
+    let startHour;
+    let filter;
+    let startDate;
+    let endDate;
+    if (graphFilter === "day") {
+        filter = graphFilter;
+        endHour = new Date().getHours();
+        startHour = 0;
+        startDate = new Date();
+        endDate = new Date();
+    } else if (graphFilter === "week") {
+        filter = graphFilter;
+        endDate = new Date();
+        startDate = new Date();
+        startDate.setDate(endDate.getDate() - 7);
+        endHour = 0;
+        startHour = 0;
+    } else if (graphFilter === "month") {
+        filter = graphFilter;
+        endDate = new Date();
+        startDate = new Date();
+        startDate.setDate(endDate.getDate() - 30);
+        endHour = 0;
+        startHour = 0;
+    } else if (graphFilter === "year") {
+        filter = graphFilter;
+        endDate = new Date();
+        startDate = new Date();
+        startDate.setDate(1);
+        startDate.setMonth(0);
+        startDate.setHours(0, 0, 0, 0);
+        endHour = 0;
+        startHour = 0;        
+    } else {
+        endHour = 0;
+        startHour = 0;
+        startDate = new Date();
+        endDate = new Date();
+    }
+
+    const graphData: ChartData[] = [];
+    const groupedData = groupData(data, filter);
+    let lastKnownValue: number | null = null;
+
+    if (filter === "day") {
+        while( startHour <= endHour ) {
+            const values = groupedData.get(startHour);
+            let avg: number;
+    
+            if (values && values.length > 0 && values[0] >= 0) {
+                avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+                lastKnownValue = avg;
+            } else if(lastKnownValue != null) {
+                avg = lastKnownValue;
+            } else {
+                startHour += 1;
+                continue;
+            }
+    
+            const xLabelDate = new Date();
+            let xLabel;
+            xLabelDate.setHours(startHour, 0, 0, 0);
+            xLabel = xLabelDate.toLocaleString('en-US', {
+                timeZone: 'America/Los_Angeles',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+    
+            graphData.push({
+                soilMoisture: avg,
+                created_at: xLabelDate.toISOString(),
+                label: xLabel,
+                timestamp: xLabelDate
+            });
+    
+            startHour += 1;       
+        }
+    } else if (filter === "week" || filter === "month") {
+        while( startDate <= endDate ) {
+            const dayOfMonth = startDate.getDate();
+            const values = groupedData.get(dayOfMonth);
+            let avg: number;
+    
+            if (values && values.length > 0 ) {
+                avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+                lastKnownValue = avg;
+            } else if(lastKnownValue != null) {
+                avg = lastKnownValue;
+            } else {
+                startDate.setDate(startDate.getDate() + 1);
+                continue;
+            }
+            const xLabel = (startDate.getMonth() + 1).toString() + "/" + startDate.getDate().toString();
+
+            graphData.push({
+                soilMoisture: avg,
+                created_at: startDate.toISOString(),
+                label: xLabel,
+                timestamp: startDate
+            });
+    
+            startDate.setDate(startDate.getDate() + 1);
+        }        
+    } else if (filter === "year") {
+        while( startDate <= endDate ) {
+            const month = startDate.getMonth();
+            const values = groupedData.get(month);
+            let avg: number;
+    
+            if (values && values.length > 0 ) {
+                avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+                lastKnownValue = avg;
+            } else if(lastKnownValue != null) {
+                avg = lastKnownValue;
+            } else {
+                startDate.setMonth(startDate.getMonth() + 1);
+                continue;
+            }
+
+            const xLabel = startDate.toLocaleString('default', { month: 'long' })
+
+            graphData.push({
+                soilMoisture: avg,
+                created_at: startDate.toISOString(),
+                label: xLabel,
+                timestamp: startDate
+            });
+    
+            startDate.setMonth(startDate.getMonth() + 1);
+        }   
+    }
+
 
     return graphData;
+
   }
 
   function renderSelectedView({
@@ -144,8 +322,7 @@ export function CurrentSoilMoistureCard() {
             <ChartContainer config={chartConfig}>
             <LineChart
               accessibilityLayer
-              // data={expanded ? chartData : chartData.slice(0, 6)}
-              data={chartDataDaily}
+              data={chartData}
               margin={{
                 top: 5,
                 left: 12,
@@ -156,18 +333,16 @@ export function CurrentSoilMoistureCard() {
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="label"
-                // dataKey={graphFilter === "day" ? "time" : "label"}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-              //   tickFormatter={(value) => value.slice(0, 3)}
               />
               {expanded && (
                 <YAxis
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  unit=" mg/kg"
+                  unit=" %"
                 />
               )}
   
@@ -185,10 +360,8 @@ export function CurrentSoilMoistureCard() {
                 }}
               />
               <Line
-                dataKey="soil_moisture"
-              //   dataKey="nitrogen"
+                dataKey = "soilMoisture"
                 type="monotone"
-                stroke="hsl(var(--chart-1))"
                 strokeWidth={2}
                 dot={false}
               />
@@ -205,7 +378,7 @@ export function CurrentSoilMoistureCard() {
     if (graphFilter) {
         getHistoricSoilMoistureById();
     }
-  }, [graphFilter]);
+  }, [graphFilter, module]);
 
   useEffect(() => {
     if (module) {
@@ -238,21 +411,65 @@ export function CurrentSoilMoistureCard() {
         toast(getAxiosErrorMessage(error));
     }
   }
+  const setStartAndEndStrings = async () => {
+    let endISOString;
+    let startISOString;
+    if (graphFilter === "day") {
+        const end = new Date();
+        const start =  new Date();
+        // this is only for testing purposes, we wont have to do this if there is data for the current day
+        end.setDate(30);
+        end.setMonth(3);
+        start.setDate(30);
+        start.setMonth(3);
+        start.setHours(0,0,0,0);
+        endISOString = end.toISOString();
+        startISOString = start.toISOString();        
+    } else if (graphFilter === "week") {
+        const end = new Date();
+        const start = new Date();
+
+        start.setDate(start.getDate() - 7);
+        start.setHours(0, 0, 0, 0);
+        endISOString = end.toISOString();
+        startISOString = start.toISOString();          
+    } else if (graphFilter === "month") {
+        const end = new Date();
+        const start = new Date();
+        // last 30 days
+        start.setDate(start.getDate() - 30);
+        start.setHours(0, 0, 0, 0);
+        endISOString = end.toISOString();
+        startISOString = start.toISOString();     
+    } else if (graphFilter === "year") {
+        const end = new Date();
+        const start = new Date();
+
+        start.setDate(1);
+        start.setMonth(0);
+        start.setHours(0, 0, 0, 0);
+        endISOString = end.toISOString();
+        startISOString = start.toISOString();            
+    }
+
+    return {
+        startISOString,
+        endISOString
+    }
+  }
 
   const getHistoricSoilMoistureById = async () => {
     try {
+        const queryStrings = await setStartAndEndStrings();
         const response = await axios.get(
-            `${BACKEND_URL}/query/historic?smid=5&sensors=soil_moisture`,
+            `${BACKEND_URL}/query/historic?smid=${module}&sensors=soil_moisture&start=${queryStrings.startISOString}&end=${queryStrings.endISOString}`,
         );
         const data: SoilMoisture[] = response.data;
 
-        // call process data here
-        setChartDataDaily(processData(data));
-        // build chart after?
-        
-
-
+        setChartData(processData(data));
+    
     } catch (error:any) {
+        setChartData([]);
         toast(getAxiosErrorMessage(error));
     }
   }
@@ -398,7 +615,7 @@ export function CurrentSoilMoistureCard() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Menu className="h-4 w-4" />
+                        <ChevronDown className="h-4 w-4" />
                         <span className="sr-only">Settings</span>
                         </Button>
                     </DropdownMenuTrigger>
@@ -407,15 +624,11 @@ export function CurrentSoilMoistureCard() {
                             value={module}
                             onValueChange={setModule}
                         >
-                            <DropdownMenuRadioItem value="all">
-                                All Modules
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="sensor module 4">
-                                Sensor Module 4
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="sensor module 5">
-                                Sensor Module 5
-                            </DropdownMenuRadioItem>
+                            {sensorModules.map((module) => (
+                                <DropdownMenuRadioItem key={module.id} value={module.id.toString()}>
+                                    Module {module.id}
+                                </DropdownMenuRadioItem>
+                            ))}
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>  

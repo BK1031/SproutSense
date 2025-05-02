@@ -338,6 +338,7 @@ const getHistoricNPK = async () => {
 
         const end = new Date();
         const start =  new Date();
+
         start.setHours(0,0,0,0);
         const endISOString = end.toISOString();
         const startISOString = start.toISOString();
