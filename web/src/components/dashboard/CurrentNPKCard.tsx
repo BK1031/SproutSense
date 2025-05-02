@@ -590,11 +590,6 @@ const setStartAndEndStrings = async () => {
   if (graphFilter === "day") {
       const end = new Date();
       const start =  new Date();
-      // this is only for testing purposes, we wont have to do this if there is data for the current day
-      end.setDate(30);
-      end.setMonth(3);
-      start.setDate(30);
-      start.setMonth(3);
       start.setHours(0,0,0,0);
       endISOString = end.toISOString();
       startISOString = start.toISOString();        
@@ -609,7 +604,6 @@ const setStartAndEndStrings = async () => {
   } else if (graphFilter === "month") {
       const end = new Date();
       const start = new Date();
-      // last 30 days
       start.setDate(start.getDate() - 30);
       start.setHours(0, 0, 0, 0);
       endISOString = end.toISOString();
@@ -617,7 +611,6 @@ const setStartAndEndStrings = async () => {
   } else if (graphFilter === "year") {
       const end = new Date();
       const start = new Date();
-
       start.setDate(1);
       start.setMonth(0);
       start.setHours(0, 0, 0, 0);

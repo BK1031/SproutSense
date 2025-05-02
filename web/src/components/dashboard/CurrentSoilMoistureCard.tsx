@@ -22,7 +22,7 @@ import { BACKEND_URL } from "@/consts/config";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useRefreshInterval } from "@/lib/store";
 import axios from "axios";
-import { Droplets, TrendingUp, Leaf, TrendingDown, Menu, Maximize2, ChevronDown} from "lucide-react";
+import { Droplets, TrendingUp, Leaf, TrendingDown, Menu, Maximize2, ChevronDown, MoveRight} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -292,12 +292,18 @@ export function CurrentSoilMoistureCard() {
                         <TrendingUp className="h-5 w-5 text-green-500"/>
                         <span className="text-lg">Soil Moisture Increased</span>
                     </div>
-                ) : (
+                ) : trendingDirection === "down" ? (
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <TrendingDown className="h-5 w-5 text-red-500"/>
                         <span className="text-lg">Soil Moisture Decreased</span>
                     </div>
-                )}
+                ) : trendingDirection === "up-down" ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <MoveRight className="h-5 w-5 text-gray-500"/>
+                        <span className="text-lg">Soil Moisture Stable</span>
+                    </div>
+                )
+                : null }
           </div>       
         )
     
@@ -417,11 +423,6 @@ export function CurrentSoilMoistureCard() {
     if (graphFilter === "day") {
         const end = new Date();
         const start =  new Date();
-        // this is only for testing purposes, we wont have to do this if there is data for the current day
-        end.setDate(30);
-        end.setMonth(3);
-        start.setDate(30);
-        start.setMonth(3);
         start.setHours(0,0,0,0);
         endISOString = end.toISOString();
         startISOString = start.toISOString();        
@@ -436,7 +437,6 @@ export function CurrentSoilMoistureCard() {
     } else if (graphFilter === "month") {
         const end = new Date();
         const start = new Date();
-        // last 30 days
         start.setDate(start.getDate() - 30);
         start.setHours(0, 0, 0, 0);
         endISOString = end.toISOString();
@@ -498,8 +498,10 @@ export function CurrentSoilMoistureCard() {
     //   if the same then what do we want to render? some neutral trend icon
       if (fixedSoilMoisture > soilMoisture) {
         setTrendingDirection("down");
-      } else {
+      } else if (fixedSoilMoisture < soilMoisture) {
         setTrendingDirection("up");
+      } else {
+        setTrendingDirection("up-down");
       }
       setSoilMoisture(response.data.soil_moisture.toFixed(2));
     } catch (error: any) {
