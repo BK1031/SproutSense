@@ -206,9 +206,8 @@ export function CurrentSoilMoistureCard() {
         }
 
         const xLabelDate = new Date();
-        let xLabel;
         xLabelDate.setHours(startHour, 0, 0, 0);
-        xLabel = xLabelDate.toLocaleString("en-US", {
+        const xLabel = xLabelDate.toLocaleString("en-US", {
           timeZone: "America/Los_Angeles",
           hour: "numeric",
           minute: "2-digit",
