@@ -6,7 +6,12 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,
@@ -16,7 +21,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { BACKEND_URL } from "@/consts/config";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
@@ -25,8 +30,6 @@ import axios from "axios";
 import { Sprout, Menu, Maximize2, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-
 
 const chartConfig = {
   N: {
@@ -44,40 +47,36 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 type NPKDataItem = {
-    id: number,
-    created_at: string,
-    nitrogen: number,
-    potassium: number,
-    phosphorus: number
-
-}
+  id: number;
+  created_at: string;
+  nitrogen: number;
+  potassium: number;
+  phosphorus: number;
+};
 
 interface ChartData {
-  N: number | null,
-  P: number | null,
-  K: number | null,
-  created_at : string,
-  label: string,
-  timestamp: Date
+  N: number | null;
+  P: number | null;
+  K: number | null;
+  created_at: string;
+  label: string;
+  timestamp: Date;
 }
 
 interface SensorModule {
-  id: number,
-  name: string,
-  latitude: number,
-  longitude: number,
-  last_ping: string,
-  created_at: string
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  last_ping: string;
+  created_at: string;
 }
-
 
 interface GroupedNPKMaps {
-  nitrogenMap: Map<number, number[]>,
-  phosphorusMap: Map<number, number[]>,
-  potassiumMap: Map<number, number[]>
+  nitrogenMap: Map<number, number[]>;
+  phosphorusMap: Map<number, number[]>;
+  potassiumMap: Map<number, number[]>;
 }
-
-
 
 export function CurrentNPKCard() {
   const [NPK] = useState("NPK");
@@ -156,12 +155,7 @@ export function CurrentNPKCard() {
               />
             )}
 
-            <ChartTooltip
-              cursor={false}
-              content={
-                    <ChartTooltipContent/>
-               }
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <ChartLegend
               content={<ChartLegendContent />}
               wrapperStyle={{
@@ -191,31 +185,32 @@ export function CurrentNPKCard() {
               dot={false}
             />
           </LineChart>
-    
         </ChartContainer>
       );
     } else if (selectedView === "averages") {
-      return(
+      return (
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
-              <span className="text-sm">Average NPK For Module {module ? module : ""}</span>
+            <span className="text-sm">
+              Average NPK For Module {module ? module : ""}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-              {nitrogenById !== undefined  ? (
-                  <span className="text-xl font-bold"> N: {nitrogenById}</span>
-              ) : (
-                  <span className="text-lg font-bold">N: </span>
-              )}
-              {phosphorusById !== undefined  ? (
-                  <span className="text-xl font-bold"> P: {phosphorusById}</span>
-              ) : (
-                  <span className="text-lg font-bold">P: </span>
-              )}
-              {potassiumById !== undefined  ? (
-                  <span className="text-xl font-bold"> K: {potassiumById}</span>
-              ) : (
-                  <span className="text-lg font-bold">K: </span>
-              )}
+            {nitrogenById !== undefined ? (
+              <span className="text-xl font-bold"> N: {nitrogenById}</span>
+            ) : (
+              <span className="text-lg font-bold">N: </span>
+            )}
+            {phosphorusById !== undefined ? (
+              <span className="text-xl font-bold"> P: {phosphorusById}</span>
+            ) : (
+              <span className="text-lg font-bold">P: </span>
+            )}
+            {potassiumById !== undefined ? (
+              <span className="text-xl font-bold"> K: {potassiumById}</span>
+            ) : (
+              <span className="text-lg font-bold">K: </span>
+            )}
           </div>
         </div>
       );
@@ -225,7 +220,7 @@ export function CurrentNPKCard() {
   const refreshInterval = useRefreshInterval();
 
   useEffect(() => {
-    if(graphFilter){
+    if (graphFilter) {
       getHistoricNPK();
     }
   }, [graphFilter, module]);
@@ -240,21 +235,17 @@ export function CurrentNPKCard() {
     getSensorModules();
     const interval = setInterval(getSensorModules, refreshInterval * 5000);
     return () => clearInterval(interval);
-  }, [refreshInterval])
+  }, [refreshInterval]);
 
   const getSensorModules = async () => {
     try {
-        const response = await axios.get(
-            `${BACKEND_URL}/sensor-module`,
-        );
+      const response = await axios.get(`${BACKEND_URL}/sensor-module`);
 
-        setSensorModules(response.data);
-
-
-    } catch (error:any) {
-        toast(getAxiosErrorMessage(error));
+      setSensorModules(response.data);
+    } catch (error: any) {
+      toast(getAxiosErrorMessage(error));
     }
-  }
+  };
 
   const getNPK = async () => {
     try {
@@ -272,31 +263,31 @@ export function CurrentNPKCard() {
 
   useEffect(() => {
     if (module) {
-        getHistoricNPKAvgById();
+      getHistoricNPKAvgById();
     }
   }, [module]);
 
   const getHistoricNPKAvgById = async () => {
     try {
-        const currentModuleId = module;
-        const response = await axios.get(
-            `${BACKEND_URL}/query/latest?&sensors=nitrogen,phosphorus,potassium&smid=${currentModuleId}`,
-        );
-        setNitrogenById(response.data.nitrogen);
-        setPhosphorusById(response.data.phosphorus);
-        setPotassiumById(response.data.potassium);
-    } catch (error:any) {
-        setNitrogenById(undefined);
-        setPhosphorusById(undefined);
-        setPotassiumById(undefined);
-        toast(getAxiosErrorMessage(error));
+      const currentModuleId = module;
+      const response = await axios.get(
+        `${BACKEND_URL}/query/latest?&sensors=nitrogen,phosphorus,potassium&smid=${currentModuleId}`,
+      );
+      setNitrogenById(response.data.nitrogen);
+      setPhosphorusById(response.data.phosphorus);
+      setPotassiumById(response.data.potassium);
+    } catch (error: any) {
+      setNitrogenById(undefined);
+      setPhosphorusById(undefined);
+      setPotassiumById(undefined);
+      toast(getAxiosErrorMessage(error));
     }
-  }
+  };
 
-  const padGroupedData = (data: GroupedNPKMaps, filter:any) => {
+  const padGroupedData = (data: GroupedNPKMaps, filter: any) => {
     const nitrogenMap = data.nitrogenMap;
     const phosphorusMap = data.phosphorusMap;
-    const potassiumMap = data.potassiumMap
+    const potassiumMap = data.potassiumMap;
     if (filter === "year" || filter === "day") {
       if (!nitrogenMap.has(0)) {
         nitrogenMap.set(0, [0]);
@@ -306,59 +297,58 @@ export function CurrentNPKCard() {
       }
       if (!potassiumMap.has(0)) {
         potassiumMap.set(0, [0]);
-      }           
+      }
     } else if (filter === "week") {
-        const currentDay = new Date();
-        const startDay = new Date();
-        startDay.setDate(currentDay.getDate() - 7);
-        if (!nitrogenMap.has(startDay.getDate())) {
-          nitrogenMap.set(startDay.getDate(), [0]);
-        }
-        if (!phosphorusMap.has(startDay.getDate())) {
-          phosphorusMap.set(startDay.getDate(), [0]);
-        }
-        if (!potassiumMap.has(startDay.getDate())) {
-          potassiumMap.set(startDay.getDate(), [0]);
-        }              
+      const currentDay = new Date();
+      const startDay = new Date();
+      startDay.setDate(currentDay.getDate() - 7);
+      if (!nitrogenMap.has(startDay.getDate())) {
+        nitrogenMap.set(startDay.getDate(), [0]);
+      }
+      if (!phosphorusMap.has(startDay.getDate())) {
+        phosphorusMap.set(startDay.getDate(), [0]);
+      }
+      if (!potassiumMap.has(startDay.getDate())) {
+        potassiumMap.set(startDay.getDate(), [0]);
+      }
     } else if (filter === "month") {
-        const currentDay = new Date();
-        const startDay = new Date();
-        startDay.setDate(currentDay.getDate() - 30);
-        if (!nitrogenMap.has(startDay.getDate())) {
-          nitrogenMap.set(startDay.getDate(), [0]);
-        }
-        if (!phosphorusMap.has(startDay.getDate())) {
-          phosphorusMap.set(startDay.getDate(), [0]);
-        }
-        if (!potassiumMap.has(startDay.getDate())) {
-          potassiumMap.set(startDay.getDate(), [0]);
-        }   
+      const currentDay = new Date();
+      const startDay = new Date();
+      startDay.setDate(currentDay.getDate() - 30);
+      if (!nitrogenMap.has(startDay.getDate())) {
+        nitrogenMap.set(startDay.getDate(), [0]);
+      }
+      if (!phosphorusMap.has(startDay.getDate())) {
+        phosphorusMap.set(startDay.getDate(), [0]);
+      }
+      if (!potassiumMap.has(startDay.getDate())) {
+        potassiumMap.set(startDay.getDate(), [0]);
+      }
     }
 
     const result: GroupedNPKMaps = {
       nitrogenMap,
       phosphorusMap,
-      potassiumMap
-    }
+      potassiumMap,
+    };
 
     return result;
-}
+  };
 
-const groupData = (data: NPKDataItem[], filter:any): GroupedNPKMaps => {
-  const nitrogenMap = new Map<number, number[]>();
-  const phosphorusMap = new Map<number, number[]>();
-  const potassiumMap = new Map<number, number[]>();
+  const groupData = (data: NPKDataItem[], filter: any): GroupedNPKMaps => {
+    const nitrogenMap = new Map<number, number[]>();
+    const phosphorusMap = new Map<number, number[]>();
+    const potassiumMap = new Map<number, number[]>();
 
-  data.forEach(item => {
-      const date = new Date(item.created_at + 'Z');
+    data.forEach((item) => {
+      const date = new Date(item.created_at + "Z");
       let keyByFilter: number;
       if (filter === "day") {
-          keyByFilter = date.getHours();
+        keyByFilter = date.getHours();
       } else if (filter === "week" || filter === "month") {
-          keyByFilter = date.getDate();
-
+        keyByFilter = date.getDate();
       } else if (filter === "year") {
-          keyByFilter = date.getMonth();         
+        keyByFilter = date.getMonth();
       } else {
         throw new Error("Invalid Filter Type");
       }
@@ -375,19 +365,18 @@ const groupData = (data: NPKDataItem[], filter:any): GroupedNPKMaps => {
 
       nitrogenMap.get(keyByFilter)!.push(item.nitrogen);
       phosphorusMap.get(keyByFilter)!.push(item.phosphorus);
-      potassiumMap.get(keyByFilter)!.push(item.potassium);  
-  })
+      potassiumMap.get(keyByFilter)!.push(item.potassium);
+    });
 
+    const result: GroupedNPKMaps = {
+      nitrogenMap,
+      phosphorusMap,
+      potassiumMap,
+    };
 
-  const result: GroupedNPKMaps = {
-    nitrogenMap,
-    phosphorusMap,
-    potassiumMap
-  }
+    return padGroupedData(result, filter);
+  };
 
-  return padGroupedData(result, filter);
-}
-  
   const processData = (data: NPKDataItem[]) => {
     let endHour;
     let startHour;
@@ -395,39 +384,39 @@ const groupData = (data: NPKDataItem[], filter:any): GroupedNPKMaps => {
     let startDate;
     let endDate;
     if (graphFilter === "day") {
-        filter = graphFilter;
-        endHour = new Date().getHours();
-        startHour = 0;
-        startDate = new Date();
-        endDate = new Date();
+      filter = graphFilter;
+      endHour = new Date().getHours();
+      startHour = 0;
+      startDate = new Date();
+      endDate = new Date();
     } else if (graphFilter === "week") {
-        filter = graphFilter;
-        endDate = new Date();
-        startDate = new Date();
-        startDate.setDate(endDate.getDate() - 7);
-        endHour = 0;
-        startHour = 0;
+      filter = graphFilter;
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7);
+      endHour = 0;
+      startHour = 0;
     } else if (graphFilter === "month") {
-        filter = graphFilter;
-        endDate = new Date();
-        startDate = new Date();
-        startDate.setDate(endDate.getDate() - 30);
-        endHour = 0;
-        startHour = 0;
+      filter = graphFilter;
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - 30);
+      endHour = 0;
+      startHour = 0;
     } else if (graphFilter === "year") {
-        filter = graphFilter;
-        endDate = new Date();
-        startDate = new Date();
-        startDate.setDate(1);
-        startDate.setMonth(0);
-        startDate.setHours(0, 0, 0, 0);
-        endHour = 0;
-        startHour = 0;        
+      filter = graphFilter;
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(1);
+      startDate.setMonth(0);
+      startDate.setHours(0, 0, 0, 0);
+      endHour = 0;
+      startHour = 0;
     } else {
-        endHour = 0;
-        startHour = 0;
-        startDate = new Date();
-        endDate = new Date();
+      endHour = 0;
+      startHour = 0;
+      startDate = new Date();
+      endDate = new Date();
     }
 
     const graphData: ChartData[] = [];
@@ -435,214 +424,225 @@ const groupData = (data: NPKDataItem[], filter:any): GroupedNPKMaps => {
     const groupedNitrogen = groupedData.nitrogenMap;
     const groupedPhosphorus = groupedData.phosphorusMap;
     const groupedPotassium = groupedData.potassiumMap;
-    
+
     let lastKnownN: number | null = null;
     let lastKnownP: number | null = null;
     let lastKnownK: number | null = null;
 
     if (filter === "day") {
-        while( startHour <= endHour ) {
-            const valuesN = groupedNitrogen.get(startHour);
-            const valuesP = groupedPhosphorus.get(startHour);
-            const valuesK = groupedPotassium.get(startHour);
+      while (startHour <= endHour) {
+        const valuesN = groupedNitrogen.get(startHour);
+        const valuesP = groupedPhosphorus.get(startHour);
+        const valuesK = groupedPotassium.get(startHour);
 
-            let avgN: number | null = null;
-            let avgP: number | null = null;
-            let avgK: number | null = null;
+        let avgN: number | null = null;
+        let avgP: number | null = null;
+        let avgK: number | null = null;
 
-            avgN = valuesN?.length ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length : lastKnownN;
-            avgP = valuesP?.length ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length : lastKnownP;
-            avgK = valuesK?.length ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length : lastKnownK;
+        avgN = valuesN?.length
+          ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length
+          : lastKnownN;
+        avgP = valuesP?.length
+          ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length
+          : lastKnownP;
+        avgK = valuesK?.length
+          ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length
+          : lastKnownK;
 
-
-            if(avgN == null && avgP == null && avgK == null){
-              startHour += 1;
-              continue;
-            }
-
-
-            if (avgN != null) {
-              lastKnownN = avgN;
-            }
-            if (avgP != null) {
-              lastKnownP = avgP;
-            }
-            if (avgK != null) {
-              lastKnownK = avgK;
-            }
-
-            const xLabelDate = new Date();
-            let xLabel;
-            xLabelDate.setHours(startHour, 0, 0, 0);
-            xLabel = xLabelDate.toLocaleString('en-US', {
-                timeZone: 'America/Los_Angeles',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-            graphData.push({
-                N: avgN,
-                P: avgP,
-                K: avgK,
-                created_at: xLabelDate.toISOString(),
-                label: xLabel,
-                timestamp: xLabelDate
-            });
-            startHour +=1;     
+        if (avgN == null && avgP == null && avgK == null) {
+          startHour += 1;
+          continue;
         }
+
+        if (avgN != null) {
+          lastKnownN = avgN;
+        }
+        if (avgP != null) {
+          lastKnownP = avgP;
+        }
+        if (avgK != null) {
+          lastKnownK = avgK;
+        }
+
+        const xLabelDate = new Date();
+        let xLabel;
+        xLabelDate.setHours(startHour, 0, 0, 0);
+        xLabel = xLabelDate.toLocaleString("en-US", {
+          timeZone: "America/Los_Angeles",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+        graphData.push({
+          N: avgN,
+          P: avgP,
+          K: avgK,
+          created_at: xLabelDate.toISOString(),
+          label: xLabel,
+          timestamp: xLabelDate,
+        });
+        startHour += 1;
+      }
     } else if (filter === "week" || filter === "month") {
-          while( startDate <= endDate ) {
-            const dayOfMonth = startDate.getDate();
+      while (startDate <= endDate) {
+        const dayOfMonth = startDate.getDate();
 
-            const valuesN = groupedNitrogen.get(dayOfMonth);
-            const valuesP = groupedPhosphorus.get(dayOfMonth);
-            const valuesK = groupedPotassium.get(dayOfMonth);
+        const valuesN = groupedNitrogen.get(dayOfMonth);
+        const valuesP = groupedPhosphorus.get(dayOfMonth);
+        const valuesK = groupedPotassium.get(dayOfMonth);
 
-            let avgN: number | null = null;
-            let avgP: number | null = null;
-            let avgK: number | null = null;
+        let avgN: number | null = null;
+        let avgP: number | null = null;
+        let avgK: number | null = null;
 
-            avgN = valuesN?.length ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length : lastKnownN;
-            avgP = valuesP?.length ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length : lastKnownP;
-            avgK = valuesK?.length ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length : lastKnownK;
-    
-            if(avgN == null && avgP == null && avgK == null){
-              startHour += 1;
-              continue;
-            }
+        avgN = valuesN?.length
+          ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length
+          : lastKnownN;
+        avgP = valuesP?.length
+          ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length
+          : lastKnownP;
+        avgK = valuesK?.length
+          ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length
+          : lastKnownK;
 
-
-            if (avgN != null) {
-              lastKnownN = avgN;
-            }
-            if (avgP != null) {
-              lastKnownP = avgP;
-            }
-            if (avgK != null) {
-              lastKnownK = avgK;
-            }
-
-            const xLabel = (startDate.getMonth() + 1).toString() + "/" + startDate.getDate().toString();
-
-            graphData.push({
-                N: avgN,
-                P: avgP,
-                K: avgK,
-                created_at: startDate.toISOString(),
-                label: xLabel,
-                timestamp: startDate
-            });
-    
-            startDate.setDate(startDate.getDate() + 1);
-        } 
-    } else if (filter  === "year") {
-          while( startDate <= endDate ) {
-            const month = startDate.getMonth();
-
-            const valuesN = groupedNitrogen.get(month);
-            const valuesP = groupedPhosphorus.get(month);
-            const valuesK = groupedPotassium.get(month);
-
-            let avgN: number | null = null;
-            let avgP: number | null = null;
-            let avgK: number | null = null;
-
-            avgN = valuesN?.length ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length : lastKnownN;
-            avgP = valuesP?.length ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length : lastKnownP;
-            avgK = valuesK?.length ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length : lastKnownK;
-
-            if(avgN == null && avgP == null && avgK == null){
-              startHour += 1;
-              continue;
-            }
-
-
-            if (avgN != null) {
-              lastKnownN = avgN;
-            }
-            if (avgP != null) {
-              lastKnownP = avgP;
-            }
-            if (avgK != null) {
-              lastKnownK = avgK;
-            }
-            const xLabel = startDate.toLocaleString('default', { month: 'long' })
-
-            graphData.push({
-              N: avgN,
-              P: avgP,
-              K: avgK,
-              created_at: startDate.toISOString(),
-              label: xLabel,
-              timestamp: startDate
-          });
-    
-            startDate.setMonth(startDate.getMonth() + 1);
+        if (avgN == null && avgP == null && avgK == null) {
+          startHour += 1;
+          continue;
         }
+
+        if (avgN != null) {
+          lastKnownN = avgN;
+        }
+        if (avgP != null) {
+          lastKnownP = avgP;
+        }
+        if (avgK != null) {
+          lastKnownK = avgK;
+        }
+
+        const xLabel =
+          (startDate.getMonth() + 1).toString() +
+          "/" +
+          startDate.getDate().toString();
+
+        graphData.push({
+          N: avgN,
+          P: avgP,
+          K: avgK,
+          created_at: startDate.toISOString(),
+          label: xLabel,
+          timestamp: startDate,
+        });
+
+        startDate.setDate(startDate.getDate() + 1);
+      }
+    } else if (filter === "year") {
+      while (startDate <= endDate) {
+        const month = startDate.getMonth();
+
+        const valuesN = groupedNitrogen.get(month);
+        const valuesP = groupedPhosphorus.get(month);
+        const valuesK = groupedPotassium.get(month);
+
+        let avgN: number | null = null;
+        let avgP: number | null = null;
+        let avgK: number | null = null;
+
+        avgN = valuesN?.length
+          ? valuesN.reduce((a, b) => a + b, 0) / valuesN.length
+          : lastKnownN;
+        avgP = valuesP?.length
+          ? valuesP.reduce((a, b) => a + b, 0) / valuesP.length
+          : lastKnownP;
+        avgK = valuesK?.length
+          ? valuesK.reduce((a, b) => a + b, 0) / valuesK.length
+          : lastKnownK;
+
+        if (avgN == null && avgP == null && avgK == null) {
+          startHour += 1;
+          continue;
+        }
+
+        if (avgN != null) {
+          lastKnownN = avgN;
+        }
+        if (avgP != null) {
+          lastKnownP = avgP;
+        }
+        if (avgK != null) {
+          lastKnownK = avgK;
+        }
+        const xLabel = startDate.toLocaleString("default", { month: "long" });
+
+        graphData.push({
+          N: avgN,
+          P: avgP,
+          K: avgK,
+          created_at: startDate.toISOString(),
+          label: xLabel,
+          timestamp: startDate,
+        });
+
+        startDate.setMonth(startDate.getMonth() + 1);
+      }
     }
     return graphData;
- 
-  }
+  };
 
-const setStartAndEndStrings = async () => {
-  let endISOString;
-  let startISOString;
-  if (graphFilter === "day") {
+  const setStartAndEndStrings = async () => {
+    let endISOString;
+    let startISOString;
+    if (graphFilter === "day") {
       const end = new Date();
-      const start =  new Date();
-      start.setHours(0,0,0,0);
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
       endISOString = end.toISOString();
-      startISOString = start.toISOString();        
-  } else if (graphFilter === "week") {
+      startISOString = start.toISOString();
+    } else if (graphFilter === "week") {
       const end = new Date();
       const start = new Date();
 
       start.setDate(start.getDate() - 7);
       start.setHours(0, 0, 0, 0);
       endISOString = end.toISOString();
-      startISOString = start.toISOString();          
-  } else if (graphFilter === "month") {
+      startISOString = start.toISOString();
+    } else if (graphFilter === "month") {
       const end = new Date();
       const start = new Date();
       start.setDate(start.getDate() - 30);
       start.setHours(0, 0, 0, 0);
       endISOString = end.toISOString();
-      startISOString = start.toISOString();     
-  } else if (graphFilter === "year") {
+      startISOString = start.toISOString();
+    } else if (graphFilter === "year") {
       const end = new Date();
       const start = new Date();
       start.setDate(1);
       start.setMonth(0);
       start.setHours(0, 0, 0, 0);
       endISOString = end.toISOString();
-      startISOString = start.toISOString();            
-  }
+      startISOString = start.toISOString();
+    }
 
-  return {
+    return {
       startISOString,
-      endISOString
-  }
-}
+      endISOString,
+    };
+  };
 
-const getHistoricNPK = async () => {
+  const getHistoricNPK = async () => {
     try {
       const queryStrings = await setStartAndEndStrings();
 
       const response = await axios.get(
         `${BACKEND_URL}/query/historic?smid=${module}&sensors=nitrogen,phosphorus,potassium&start=${queryStrings.startISOString}&end=${queryStrings.endISOString}`,
       );
-      
+
       const data: NPKDataItem[] = response.data;
       setGraphData(processData(data));
-
-
-      
     } catch (error: any) {
-      // toast(getAxiosErrorMessage(error));
       setGraphData([]);
     }
   };
-
 
   return (
     <>
@@ -653,29 +653,32 @@ const getHistoricNPK = async () => {
             <span className="text-xl font-semibold">{NPK || "Loading..."}</span>
           </CardTitle>
           <div className="flex items-center gap-1">
-                {selectedView == "averages" &&
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <ChevronDown className="h-4 w-4" />
-                            <span className="sr-only">Settings</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56">
-                            <DropdownMenuRadioGroup
-                            value={module}
-                            onValueChange={setModule}
-                            >
-                                {sensorModules.map((module) => (
-                                    <DropdownMenuRadioItem key={module.id} value={module.id.toString()}>
-                                        Module {module.id}
-                                    </DropdownMenuRadioItem>
-                                ))}
-                            </DropdownMenuRadioGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                }
+            {selectedView == "averages" && (
               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <ChevronDown className="h-4 w-4" />
+                    <span className="sr-only">Settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuRadioGroup
+                    value={module}
+                    onValueChange={setModule}
+                  >
+                    {sensorModules.map((module) => (
+                      <DropdownMenuRadioItem
+                        key={module.id}
+                        value={module.id.toString()}
+                      >
+                        Module {module.id}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Menu className="h-4 w-4" />
@@ -699,7 +702,7 @@ const getHistoricNPK = async () => {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            {selectedView === "graph" &&
+            {selectedView === "graph" && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -708,7 +711,7 @@ const getHistoricNPK = async () => {
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>
-            }
+            )}
           </div>
         </CardHeader>
 
@@ -719,56 +722,60 @@ const getHistoricNPK = async () => {
 
       <Dialog open={expanded} onOpenChange={setExpanded}>
         <DialogContent className="max-h-[80vh] sm:max-w-[800px]">
-          <DialogHeader className = "flex items-center justify-between">
+          <DialogHeader className="flex items-center justify-between">
             <DialogTitle>
-                <div className="flex items-center gap-2 text-xl font-semibold">
-                    <Sprout className="h-5 w-5 text-muted-foreground"/>
-                    <span>{NPK || "Loading..."}</span>
-                </div>
+              <div className="flex items-center gap-2 text-xl font-semibold">
+                <Sprout className="h-5 w-5 text-muted-foreground" />
+                <span>{NPK || "Loading..."}</span>
+              </div>
             </DialogTitle>
           </DialogHeader>
           {selectedView == "graph" && (
-            <ToggleGroup variant="outline" 
-                type="single"
-                value={graphFilter}
-                onValueChange={(value=> {
-                    if (value) setGraphFilter(value);
-                })}
-                >
-                <ToggleGroupItem value="day" aria-label="Toggle day">
+            <ToggleGroup
+              variant="outline"
+              type="single"
+              value={graphFilter}
+              onValueChange={(value) => {
+                if (value) setGraphFilter(value);
+              }}
+            >
+              <ToggleGroupItem value="day" aria-label="Toggle day">
                 <span className="text-xl text-muted-foreground">{"1D"}</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="week" aria-label="Toggle week">
-                    <span className="text-xl text-muted-foreground">{"1W"}</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="month" aria-label="Toggle month">
-                    <span className="text-xl text-muted-foreground">{"1M"}</span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value="year" aria-label="Toggle year">
-                    <span className="text-xl text-muted-foreground">{"1Y"}</span>
-                </ToggleGroupItem>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ChevronDown className="h-4 w-4" />
-                        <span className="sr-only">Settings</span>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                        <DropdownMenuRadioGroup
-                            value={module}
-                            onValueChange={setModule}
-                        >
-                            {sensorModules.map((module) => (
-                                <DropdownMenuRadioItem key={module.id} value={module.id.toString()}>
-                                    Module {module.id}
-                                </DropdownMenuRadioItem>
-                            ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="week" aria-label="Toggle week">
+                <span className="text-xl text-muted-foreground">{"1W"}</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="month" aria-label="Toggle month">
+                <span className="text-xl text-muted-foreground">{"1M"}</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="year" aria-label="Toggle year">
+                <span className="text-xl text-muted-foreground">{"1Y"}</span>
+              </ToggleGroupItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <ChevronDown className="h-4 w-4" />
+                    <span className="sr-only">Settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuRadioGroup
+                    value={module}
+                    onValueChange={setModule}
+                  >
+                    {sensorModules.map((module) => (
+                      <DropdownMenuRadioItem
+                        key={module.id}
+                        value={module.id.toString()}
+                      >
+                        Module {module.id}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </ToggleGroup>
-            )}
+          )}
 
           <div className="w-full">
             {renderSelectedView({ expanded: true, selectedView: selectedView })}

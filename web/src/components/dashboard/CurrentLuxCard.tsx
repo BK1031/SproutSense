@@ -28,14 +28,13 @@ import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useRefreshInterval } from "@/lib/store";
 import axios from "axios";
 import {
-  Droplets,
   TrendingUp,
-  Leaf,
   TrendingDown,
   Menu,
   Maximize2,
   ChevronDown,
   MoveRight,
+  Sun,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -49,35 +48,33 @@ interface SensorModule {
   created_at: string;
 }
 
-interface SoilMoisture {
+interface Lux {
   created_at: string;
-  soil_moisture: number;
+  lux: number;
 }
 
 interface ChartData {
-  soilMoisture: number;
+  lux: number;
   created_at: string;
   label: string;
   timestamp: Date;
 }
 
 const chartConfig = {
-  soilMoisture: {
-    label: "Soil Moisture",
-    color: "hsl(210, 100%, 50%)",
+  lux: {
+    label: "Lux",
+    color: "hsl(25, 100%, 50%)",
   },
 } satisfies ChartConfig;
 
-export function CurrentSoilMoistureCard() {
-  const [soilMoisture, setSoilMoisture] = useState(0);
+export function CurrentLuxCard() {
+  const [lux, setLux] = useState(0);
   const [trendingDirection, setTrendingDirection] = useState("up");
   const [selectedView, setSelectedView] = useState("averages");
   const [expanded, setExpanded] = useState(false);
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [module, setModule] = useState<string | undefined>("4");
-  const [soilMoistureById, setSoilMoistureById] = useState<
-    string | undefined
-  >();
+  const [luxById, setLuxByid] = useState<string | undefined>();
   const [graphFilter, setGraphFilter] = useState<string | undefined>("day");
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
@@ -111,7 +108,7 @@ export function CurrentSoilMoistureCard() {
     return data;
   };
 
-  const groupData = (data: SoilMoisture[], filter: any) => {
+  const groupData = (data: Lux[], filter: any) => {
     const groupedDataByFilter = new Map<number, number[]>();
 
     data.forEach((item) => {
@@ -123,28 +120,28 @@ export function CurrentSoilMoistureCard() {
         if (!groupedDataByFilter.has(keyByFilter)) {
           groupedDataByFilter.set(keyByFilter, []);
         }
-        groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);
+        groupedDataByFilter.get(keyByFilter)!.push(item.lux);
       } else if (filter === "week" || filter === "month") {
         keyByFilter = date.getDate();
 
         if (!groupedDataByFilter.has(keyByFilter)) {
           groupedDataByFilter.set(keyByFilter, []);
         }
-        groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);
+        groupedDataByFilter.get(keyByFilter)!.push(item.lux);
       } else if (filter === "year") {
         keyByFilter = date.getMonth();
 
         if (!groupedDataByFilter.has(keyByFilter)) {
           groupedDataByFilter.set(keyByFilter, []);
         }
-        groupedDataByFilter.get(keyByFilter)!.push(item.soil_moisture);
+        groupedDataByFilter.get(keyByFilter)!.push(item.lux);
       }
     });
 
     return padGroupedData(groupedDataByFilter, filter);
   };
 
-  const processData = (data: SoilMoisture[]) => {
+  const processData = (data: Lux[]) => {
     let endHour;
     let startHour;
     let filter;
@@ -216,7 +213,7 @@ export function CurrentSoilMoistureCard() {
         });
 
         graphData.push({
-          soilMoisture: avg,
+          lux: avg,
           created_at: xLabelDate.toISOString(),
           label: xLabel,
           timestamp: xLabelDate,
@@ -245,7 +242,7 @@ export function CurrentSoilMoistureCard() {
           startDate.getDate().toString();
 
         graphData.push({
-          soilMoisture: avg,
+          lux: avg,
           created_at: startDate.toISOString(),
           label: xLabel,
           timestamp: startDate,
@@ -272,7 +269,7 @@ export function CurrentSoilMoistureCard() {
         const xLabel = startDate.toLocaleString("default", { month: "long" });
 
         graphData.push({
-          soilMoisture: avg,
+          lux: avg,
           created_at: startDate.toISOString(),
           label: xLabel,
           timestamp: startDate,
@@ -296,23 +293,22 @@ export function CurrentSoilMoistureCard() {
       return (
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
-            <Droplets className="h-6 w-6 text-muted-foreground" />
-            <span className="text-4xl font-bold">{soilMoisture}%</span>
+            <span className="text-4xl font-bold">{lux} Lux</span>
           </div>
           {trendingDirection === "up" ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <TrendingUp className="h-5 w-5 text-green-500" />
-              <span className="text-lg">Soil Moisture Increased</span>
+              <span className="text-lg">Lux Increased</span>
             </div>
           ) : trendingDirection === "down" ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <TrendingDown className="h-5 w-5 text-red-500" />
-              <span className="text-lg">Soil Moisture Decreased</span>
+              <span className="text-lg">Lux Decreased</span>
             </div>
           ) : trendingDirection === "up-down" ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <MoveRight className="h-5 w-5 text-gray-500" />
-              <span className="text-lg">Soil Moisture Stable</span>
+              <span className="text-lg">Lux Stable</span>
             </div>
           ) : null}
         </div>
@@ -322,15 +318,14 @@ export function CurrentSoilMoistureCard() {
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
             <span className="text-sm">
-              Average Soil Moisture For Module {module ? module : ""}
+              Average Lux For Module {module ? module : ""}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Droplets className="h-6 w-6 text-muted-foreground" />
-            {soilMoistureById !== undefined ? (
-              <span className="text-4xl font-bold">{soilMoistureById}%</span>
+            {luxById !== undefined ? (
+              <span className="text-4xl font-bold">{luxById} Lux</span>
             ) : (
-              <span className="text-lg font-bold">No Moisture Data</span>
+              <span className="text-lg font-bold">No Lux data</span>
             )}
           </div>
         </div>
@@ -360,7 +355,7 @@ export function CurrentSoilMoistureCard() {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                unit=" %"
+                unit=" Lux"
               />
             )}
 
@@ -373,10 +368,11 @@ export function CurrentSoilMoistureCard() {
               }}
             />
             <Line
-              dataKey="soilMoisture"
+              dataKey="lux"
               type="monotone"
               strokeWidth={2}
               dot={false}
+              stroke={chartConfig.lux.color}
             />
           </LineChart>
         </ChartContainer>
@@ -385,19 +381,19 @@ export function CurrentSoilMoistureCard() {
   }
   useEffect(() => {
     if (graphFilter) {
-      getHistoricSoilMoistureById();
+      getHistoricLuxById();
     }
   }, [graphFilter, module]);
 
   useEffect(() => {
     if (module) {
-      getSoilMoistureByModuleId();
+      getLuxByModuleId();
     }
   }, [module]);
 
   useEffect(() => {
-    getSoilMoisture();
-    const interval = setInterval(getSoilMoisture, refreshInterval * 1000);
+    getLux();
+    const interval = setInterval(getLux, refreshInterval * 1000);
     return () => clearInterval(interval);
   }, [refreshInterval]);
 
@@ -457,13 +453,13 @@ export function CurrentSoilMoistureCard() {
     };
   };
 
-  const getHistoricSoilMoistureById = async () => {
+  const getHistoricLuxById = async () => {
     try {
       const queryStrings = await setStartAndEndStrings();
       const response = await axios.get(
-        `${BACKEND_URL}/query/historic?smid=${module}&sensors=soil_moisture&start=${queryStrings.startISOString}&end=${queryStrings.endISOString}`,
+        `${BACKEND_URL}/query/historic?smid=${module}&sensors=lux&start=${queryStrings.startISOString}&end=${queryStrings.endISOString}`,
       );
-      const data: SoilMoisture[] = response.data;
+      const data: Lux[] = response.data;
 
       setChartData(processData(data));
     } catch (error: any) {
@@ -472,35 +468,36 @@ export function CurrentSoilMoistureCard() {
     }
   };
 
-  const getSoilMoistureByModuleId = async () => {
+  const getLuxByModuleId = async () => {
     try {
       // replace this with historic avg api when its implemented
       const currentModuleId = module;
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=soil_moisture&smid=${currentModuleId}`,
+        `${BACKEND_URL}/query/latest?sensors=lux&smid=${currentModuleId}`,
       );
-      const fixedSoilMoisture = response.data.soil_moisture.toFixed(2);
-      setSoilMoistureById(fixedSoilMoisture);
+      const fixedLux = response.data.lux.toFixed(2);
+      setLuxByid(fixedLux);
     } catch (error: any) {
-      setSoilMoistureById(undefined);
+      setLuxByid(undefined);
       toast(getAxiosErrorMessage(error));
     }
   };
 
-  const getSoilMoisture = async () => {
+  const getLux = async () => {
     try {
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=soil_moisture`,
+        `${BACKEND_URL}/query/latest?sensors=lux`,
       );
-      const fixedSoilMoisture = response.data.soil_moisture.toFixed(2);
-      if (fixedSoilMoisture > soilMoisture) {
+      const fixedLux = response.data.lux.toFixed(2);
+
+      if (fixedLux > lux) {
         setTrendingDirection("down");
-      } else if (fixedSoilMoisture < soilMoisture) {
+      } else if (fixedLux < lux) {
         setTrendingDirection("up");
       } else {
         setTrendingDirection("up-down");
       }
-      setSoilMoisture(response.data.soil_moisture.toFixed(2));
+      setLux(fixedLux);
     } catch (error: any) {
       toast(getAxiosErrorMessage(error));
     }
@@ -511,8 +508,8 @@ export function CurrentSoilMoistureCard() {
       <Card className="h-full w-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="flex flex-row items-center gap-2">
-            <Leaf className="h-5 w-5 text-muted-foreground" />
-            <span className="text-xl font-semibold">{"Soil Moisture"}</span>
+            <Sun className="h-5 w-5 text-muted-foreground" />
+            <span className="text-xl font-semibold">{"LUX"}</span>
           </CardTitle>
           <div className="flex items-center gap-1">
             {selectedView == "averages" && (
@@ -585,8 +582,8 @@ export function CurrentSoilMoistureCard() {
           <DialogHeader className="flex items-center justify-between">
             <DialogTitle>
               <div className="flex items-center gap-2 text-xl font-semibold">
-                <Leaf className="h-5 w-5 text-muted-foreground" />
-                <span className="text-xl font-semibold">{"Soil Moisture"}</span>
+                <Sun className="h-5 w-5 text-muted-foreground" />
+                <span className="text-xl font-semibold">{"Lux"}</span>
               </div>
             </DialogTitle>
           </DialogHeader>
