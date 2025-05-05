@@ -37,9 +37,11 @@ def query_sensors(smid: int, sensors: list[str], start: str = None, end: str = N
         query += f"\nAND created_at < '{end}'"
 
     query += "\nORDER BY created_at ASC;"
-        
+
+
     db = get_db()
     result = pd.read_sql(query, db.bind)
+
     return [
         result[result['name'] == sensor][['created_at', 'value']]
         .rename(columns={'value': sensor})
@@ -153,7 +155,6 @@ def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
 
     if method == 'ffill':
         if df.iloc[0].isna().any():
-            print("there are nans in the first row")
             first_row = df.iloc[0].fillna(0)
             df.iloc[0] = first_row
         df = df.ffill()
@@ -258,7 +259,5 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
 
     # Round created_at to nearest second
     merged['created_at'] = merged['created_at'].dt.round('s')
-
-    print(f"the merged we return {merged}")
     
     return merged
