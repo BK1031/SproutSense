@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from typing import List
+import numpy as np
 from pydantic import BaseModel
 from ingest.service.query import merge_to_largest, query_latest_average_sensors, query_latest_sensors, query_sensors
 import datetime
@@ -42,7 +43,14 @@ async def get_latest_sensors(smid: int = None, sensors: str = None):
             sensor_list = sensors.split(",")
             result = query_latest_sensors(smid, sensor_list)
 
-        response = result.to_dict('records')[0] if len(result) == 1 else result.to_dict('records')
+        df_dict = result.copy()
+        df_dict['created_at'] = df_dict['created_at'].dt.tz_localize('UTC').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        
+        # Replace inf/-inf and NaN values with None
+        df_dict = df_dict.replace([np.inf, -np.inf], None)
+        df_dict = df_dict.replace({np.nan: None})
+        
+        response = df_dict.to_dict('records')[0] if len(df_dict) == 1 else df_dict.to_dict('records')
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -77,7 +85,14 @@ async def get_historic_sensors(smid: int = None, sensors: str = None, start: str
         sensor_list = sensors.split(",")
         result = query_sensors(smid, sensor_list, start, end)
         result = merge_to_largest(*result, fill=fill)
-        response = result.to_dict('records')
+        # Convert timestamps to ISO format strings and handle special float values
+        df_dict = result.copy()
+        df_dict['created_at'] = df_dict['created_at'].dt.tz_localize('UTC').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        
+        # Replace inf/-inf and NaN values with None
+        df_dict = df_dict.replace([np.inf, -np.inf], None)
+        df_dict = df_dict.replace({np.nan: None})
+        response = df_dict.to_dict(orient='records')
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

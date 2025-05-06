@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ingest.service.sensor_module import update_sensor_module
 from ingest.models.sensor import Sensor
 from ingest.database.db import get_db
@@ -99,7 +99,7 @@ def save_sensor_data(bsid, smid, name, value, millis):
     model.name = name
     model.value = value
     model.millis = millis
-    model.created_at = datetime.now(datetime.timezone.utc)
+    model.created_at = datetime.now(timezone.utc)
     db.add(model)
     db.commit()
 

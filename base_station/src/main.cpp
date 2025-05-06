@@ -59,7 +59,7 @@ int getExpectedMessageLength(uint8_t messageType) {
     }
 }
 
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 #include <time.h>
 
@@ -194,7 +194,9 @@ void loop() {
         bufferIndex++;
 
         // Send raw byte
-        // mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
+        if (DEBUG_MODE) {
+            mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), &incoming, 1);
+        }
 
         if (bufferIndex == 1 && incoming == MESSAGE_END) {
             resetBuffer();
@@ -206,7 +208,9 @@ void loop() {
         int expectedLength = MIN_MESSAGE_LENGTH;
         if (bufferIndex > 0) {
             expectedLength = getExpectedMessageLength(loraBuffer[0]);
-            // mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), ("expecting length: " + String(expectedLength)).c_str(), true);
+            if (DEBUG_MODE) {
+                mqtt.publish(("ingest/" + String(bsid) + "/debug").c_str(), ("expecting length: " + String(expectedLength)).c_str(), true);
+            }
         }
         
         // Check if we've reached the expected length AND found the end marker
