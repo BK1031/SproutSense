@@ -99,7 +99,7 @@ def save_sensor_data(bsid, smid, name, value, millis):
     model.name = name
     model.value = value
     model.millis = millis
-    model.created_at = datetime.datetime.now(datetime.timezone.utc)
+    model.created_at = datetime.now(datetime.timezone.utc)
     db.add(model)
     db.commit()
 
