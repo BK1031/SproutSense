@@ -115,7 +115,7 @@ export function CurrentSoilMoistureCard() {
     const groupedDataByFilter = new Map<number, number[]>();
 
     data.forEach((item) => {
-      const date = new Date(item.created_at + "Z");
+      const date = new Date(item.created_at);
       let keyByFilter;
       if (filter === "day") {
         keyByFilter = date.getHours();

@@ -341,7 +341,7 @@ export function CurrentNPKCard() {
     const potassiumMap = new Map<number, number[]>();
 
     data.forEach((item) => {
-      const date = new Date(item.created_at + "Z");
+      const date = new Date(item.created_at);
       let keyByFilter: number;
       if (filter === "day") {
         keyByFilter = date.getHours();
@@ -383,6 +383,7 @@ export function CurrentNPKCard() {
     let filter;
     let startDate;
     let endDate;
+
     if (graphFilter === "day") {
       filter = graphFilter;
       endHour = new Date().getHours();
@@ -586,6 +587,8 @@ export function CurrentNPKCard() {
         startDate.setMonth(startDate.getMonth() + 1);
       }
     }
+
+
     return graphData;
   };
 
