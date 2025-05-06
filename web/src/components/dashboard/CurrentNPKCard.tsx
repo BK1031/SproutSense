@@ -588,7 +588,6 @@ export function CurrentNPKCard() {
       }
     }
 
-
     return graphData;
   };
 
