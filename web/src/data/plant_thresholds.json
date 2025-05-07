@@ -1,0 +1,38 @@
+{
+    "tomato": {
+      "temperature": { "min": 18, "max": 27 },
+      "humidity": { "min": 60, "max": 80 },
+      "lux": { "min": 10000, "max": 30000 },
+      "nitrogen": { "min": 20, "max": 50 },
+      "phosphorus": { "min": 15, "max": 30 },
+      "potassium": { "min": 20, "max": 40 },
+      "soil_moisture": { "min": 30, "max": 60 }
+    },
+    "basil": {
+      "temperature": { "min": 20, "max": 30 },
+      "humidity": { "min": 50, "max": 70 },
+      "lux": { "min": 15000, "max": 25000 },
+      "nitrogen": { "min": 10, "max": 30 },
+      "phosphorus": { "min": 10, "max": 25 },
+      "potassium": { "min": 15, "max": 35 },
+      "soil_moisture": { "min": 40, "max": 70 }
+    },
+    "lettuce": {
+      "temperature": { "min": 10, "max": 21 },
+      "humidity": { "min": 50, "max": 70 },
+      "lux": { "min": 8000, "max": 20000 },
+      "nitrogen": { "min": 15, "max": 40 },
+      "phosphorus": { "min": 10, "max": 25 },
+      "potassium": { "min": 10, "max": 30 },
+      "soil_moisture": { "min": 60, "max": 80 }
+    },
+    "spinach": {
+      "temperature": { "min": 5, "max": 20 },
+      "humidity": { "min": 50, "max": 75 },
+      "lux": { "min": 6000, "max": 18000 },
+      "nitrogen": { "min": 20, "max": 45 },
+      "phosphorus": { "min": 15, "max": 30 },
+      "potassium": { "min": 15, "max": 35 },
+      "soil_moisture": { "min": 65, "max": 85 }
+    }
+  }

@@ -3,6 +3,7 @@ import { CurrentWeatherCard } from "@/components/dashboard/CurrentWeatherCard";
 import { CurrentBPSCard } from "@/components/dashboard/CurrentBPSCard";
 import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
 import { AIRecommendationCard } from "@/components/dashboard/AiRecommendationCard";
+import { ThresholdAlertCard } from "@/components/dashboard/ThresholdAlertCard";
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf } from "lucide-react";
 
@@ -31,29 +32,29 @@ export default function Dashboard() {
             <CurrentNPKCard />
           </Widget>
           <Widget
-            title="Current Weather"
+            title="Threshold Alerts"
             icon={Leaf}
             width="350px"
-            height="200px"
+            height="300px"
           >
-            <div className="h-full w-full bg-sky-300">300x200</div>
+            <ThresholdAlertCard />
           </Widget>
           <Widget
             title="AI Watering Recommendation"
             icon={Leaf}
             width="350px"
-            height="250px"
+            height="350px"
           >
             <AIRecommendationCard />
           </Widget>
-          <Widget
+          {/* <Widget
             title="Current Weather"
             icon={Leaf}
             width="615px"
             height="200px"
           >
             <div className="h-full w-full bg-sky-300">600x200</div>
-          </Widget>
+          </Widget> */}
         </div>
       </Layout>
     </>
