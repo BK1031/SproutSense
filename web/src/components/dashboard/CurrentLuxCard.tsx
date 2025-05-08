@@ -469,17 +469,29 @@ export function CurrentLuxCard() {
 
   const getLuxByModuleId = async () => {
     try {
-      // replace this with historic avg api when its implemented
       const currentModuleId = module;
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=lux&smid=${currentModuleId}`,
+        `${BACKEND_URL}/query/historic?sensors=lux&smid=${currentModuleId}`,
       );
-      const fixedLux = response.data.lux.toFixed(2);
+      const fixedLux = averageOfData(response.data).toFixed(2);
       setLuxByid(fixedLux);
     } catch (error: any) {
       setLuxByid(undefined);
       toast(getAxiosErrorMessage(error));
     }
+  };
+
+  const averageOfData = (data: Lux[]) => {
+    if (data.length === 0) {
+      return 0;
+    }
+
+    let averageLux = 0;
+    data.forEach((item) => {
+      averageLux += item.lux;
+    });
+
+    return averageLux / data.length;
   };
 
   const getLux = async () => {

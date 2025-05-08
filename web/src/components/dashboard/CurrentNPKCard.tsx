@@ -86,9 +86,9 @@ export function CurrentNPKCard() {
   const [selectedView, setSelectedView] = useState("latest");
   const [expanded, setExpanded] = useState(false);
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
-  const [nitrogenById, setNitrogenById] = useState<number | undefined>();
-  const [potassiumById, setPotassiumById] = useState<number | undefined>();
-  const [phosphorusById, setPhosphorusById] = useState<number | undefined>();
+  const [nitrogenById, setNitrogenById] = useState<string | undefined>();
+  const [potassiumById, setPotassiumById] = useState<string | undefined>();
+  const [phosphorusById, setPhosphorusById] = useState<string | undefined>();
   const [module, setModule] = useState<string | undefined>("4");
   const [graphFilter, setGraphFilter] = useState("day");
   const [graphData, setGraphData] = useState<ChartData[]>([]);
@@ -271,17 +271,51 @@ export function CurrentNPKCard() {
     try {
       const currentModuleId = module;
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?&sensors=nitrogen,phosphorus,potassium&smid=${currentModuleId}`,
+        `${BACKEND_URL}/query/historic?&sensors=nitrogen,phosphorus,potassium&smid=${currentModuleId}`,
       );
-      setNitrogenById(response.data.nitrogen);
-      setPhosphorusById(response.data.phosphorus);
-      setPotassiumById(response.data.potassium);
+      const avgNpkVals = averageOfData(response.data);
+      const avgN = avgNpkVals.averageNitrogen.toFixed(2);
+      const avgP = avgNpkVals.averagePhosphorus.toFixed(2);
+      const avgK = avgNpkVals.averagePotassium.toFixed(2);
+      setNitrogenById(avgN);
+      setPhosphorusById(avgP);
+      setPotassiumById(avgK);
     } catch (error: any) {
       setNitrogenById(undefined);
       setPhosphorusById(undefined);
       setPotassiumById(undefined);
       toast(getAxiosErrorMessage(error));
     }
+  };
+
+  const averageOfData = (data: NPKDataItem[]) => {
+    let averageNitrogen = 0;
+    let averagePhosphorus = 0;
+    let averagePotassium = 0;
+
+    if (data.length === 0) {
+      return {
+        averageNitrogen,
+        averagePhosphorus,
+        averagePotassium,
+      };
+    }
+
+    data.forEach((item) => {
+      averageNitrogen += item.nitrogen;
+      averagePhosphorus += item.phosphorus;
+      averagePotassium += item.potassium;
+    });
+
+    averageNitrogen = averageNitrogen / data.length;
+    averagePhosphorus = averagePhosphorus / data.length;
+    averagePotassium = averagePotassium / data.length;
+
+    return {
+      averageNitrogen,
+      averagePhosphorus,
+      averagePotassium,
+    };
   };
 
   const padGroupedData = (data: GroupedNPKMaps, filter: any) => {

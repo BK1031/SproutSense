@@ -144,6 +144,19 @@ export function CurrentSoilMoistureCard() {
     return padGroupedData(groupedDataByFilter, filter);
   };
 
+  const averageOfData = (data: SoilMoisture[]) => {
+    if (data.length === 0) {
+      return 0;
+    }
+
+    let averageSoilMoisture = 0;
+    data.forEach((item) => {
+      averageSoilMoisture += item.soil_moisture;
+    });
+
+    return averageSoilMoisture / data.length;
+  };
+
   const processData = (data: SoilMoisture[]) => {
     let endHour;
     let startHour;
@@ -473,13 +486,13 @@ export function CurrentSoilMoistureCard() {
 
   const getSoilMoistureByModuleId = async () => {
     try {
-      // replace this with historic avg api when its implemented
       const currentModuleId = module;
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=soil_moisture&smid=${currentModuleId}`,
+        `${BACKEND_URL}/query/historic?smid=${currentModuleId}&sensors=soil_moisture`,
       );
-      const fixedSoilMoisture = response.data.soil_moisture.toFixed(2);
-      setSoilMoistureById(fixedSoilMoisture);
+
+      const averageSoilMoisture = averageOfData(response.data).toFixed(2);
+      setSoilMoistureById(averageSoilMoisture);
     } catch (error: any) {
       setSoilMoistureById(undefined);
       toast(getAxiosErrorMessage(error));
