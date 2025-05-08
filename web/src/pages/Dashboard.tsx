@@ -46,21 +46,23 @@ export default function Dashboard() {
           </Widget>
 
           <Widget
+            title="AI Watering Recommendation"
+            icon={Leaf}
+            width="350px"
+            height="200px"
+          >
+            <AIRecommendationCard />
+          </Widget>
+
+          {/* <Widget
             title="Threshold Alerts"
             icon={Leaf}
             width="350px"
             height="300px"
           >
             <ThresholdAlertCard />
-          </Widget>
-          <Widget
-            title="AI Watering Recommendation"
-            icon={Leaf}
-            width="350px"
-            height="350px"
-          >
-            <AIRecommendationCard />
-          </Widget>
+          </Widget> */}
+
           {/* <Widget
             title="Current Weather"
             icon={Leaf}

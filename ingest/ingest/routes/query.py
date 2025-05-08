@@ -96,3 +96,25 @@ async def get_historic_sensors(smid: int = None, sensors: str = None, start: str
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/latest-timestamp")
+async def get_latest_timestamp(sensors: str):
+    """
+    Returns the timestamp of the most recent sensor reading (UTC ISO string).
+    Used for checking if new data is available.
+    """
+    if not sensors:
+        raise HTTPException(status_code=400, detail="query parameter 'sensors' is required")
+    
+    try:
+        sensor_list = sensors.split(",")
+        result = query_latest_average_sensors(sensor_list)
+
+        if result.empty:
+            raise HTTPException(status_code=404, detail="No sensor data found")
+
+        latest_timestamp = result["created_at"].max()
+        return {"latest_timestamp": latest_timestamp.tz_localize('UTC').isoformat()}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

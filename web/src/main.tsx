@@ -10,7 +10,7 @@ import DebugPage from "@/pages/DebugPage";
 import ModulesPage from "@/pages/modules/ModulesPage";
 import MapPage from "@/pages/map/MapPage";
 import QueryPage from "@/pages/query/QueryPage";
-import SettingsPage from "./pages/settingsPage";
+import SettingsPage from "./pages/SettingsPage";
 const router = createBrowserRouter([
   {
     path: "/",

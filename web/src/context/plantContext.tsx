@@ -14,7 +14,7 @@ const PlantContext = createContext<PlantContextType>({
 });
 
 export const PlantProvider = ({ children }: { children: React.ReactNode }) => {
-  const [selectedPlant, setSelectedPlantState] = useState<string>("");
+  const [selectedPlant, setSelectedPlantState] = useState<string>("tomato");
 
   // Load from localStorage on mount
   useEffect(() => {

@@ -1,7 +1,10 @@
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, AlertCircle } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useAlerts } from "@/hooks/useAlerts";
 
 interface HeaderProps {
   className?: string;
@@ -12,6 +15,10 @@ interface HeaderProps {
 
 const Header = (props: HeaderProps) => {
   const { theme, setTheme } = useTheme();
+  const { alerts, dismissAlerts, fetchSensorData, loading } = useAlerts();
+  //const [showAlerts, setShowAlerts] = useState(true);
+
+  const hasAlerts = alerts.length > 0 //&& showAlerts;
 
   return (
     <nav
@@ -23,6 +30,55 @@ const Header = (props: HeaderProps) => {
           <h1 className="text-2xl font-bold">{props.headerTitle}</h1>
         </div>
         <div className="mr-4 flex flex-row items-center gap-4 p-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={hasAlerts ? "text-red-600 hover:text-red-700" : "text-muted-foreground hover:text-foreground"}
+            >
+              <AlertCircle className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">View alerts</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-3">
+            <div className="flex justify-between items-center mb-2">
+              <p className={`text-sm font-semibold ${hasAlerts ? "text-red-600" : "text-muted-foreground"}`}>
+                Sensor Alerts
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground"
+                onClick={fetchSensorData}
+                disabled={loading}
+              >
+                {loading ? "Checking..." : "Check Alerts"}
+              </Button>
+            </div>
+
+            {hasAlerts ? (
+              <>
+                <ul className="list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400">
+                  {alerts.map((alert, idx) => (
+                    <li key={idx}>{alert}</li>
+                  ))}
+                </ul>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2 text-xs text-muted-foreground"
+                  onClick={dismissAlerts}
+                >
+                  Dismiss Alerts
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No alerts at this time.</p>
+            )}
+          </PopoverContent>
+        </Popover>
+
           <Button
             variant="ghost"
             size="icon"
