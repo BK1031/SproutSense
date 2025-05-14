@@ -41,6 +41,8 @@ export default function MapPage() {
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
   const [navigationURL, setNavigationURL] = useState<string | null>(null);
+  // const markersRef = useRef<{marker: mapboxgl.Marker, root: ReturnType<typeof createRoot>}[]>([]);
+  const rootsRef = useRef<ReturnType<typeof createRoot>[]>([]);
 
   const fetchModules = () => {
     try {
@@ -61,15 +63,16 @@ export default function MapPage() {
     }
   };
 
-
   useEffect(() => {
     const navUrl = navigationURL;
 
-    console.log("this is my function", setNavigationURL); 
-    if(navUrl){
+    if (navUrl) {
+      rootsRef.current.forEach((root) => {
+        root.unmount();
+      });
       navigate(navUrl);
     }
-  }, [navigationURL])
+  }, [navigationURL]);
 
   useEffect(() => {
     fetchModules();
@@ -124,6 +127,8 @@ export default function MapPage() {
         new mapboxgl.Marker(el)
           .setLngLat([station.longitude, station.latitude])
           .addTo(mapInstance);
+
+        rootsRef.current.push(root);
       }
     });
 
@@ -132,11 +137,19 @@ export default function MapPage() {
       if (module.latitude && module.longitude) {
         const el = document.createElement("div");
         const root = createRoot(el);
-        root.render(<MapMarker data={module} type="sensor-module" />);
+        root.render(
+          <MapMarker
+            data={module}
+            type="sensor-module"
+            setNavigationURL={setNavigationURL}
+          />,
+        );
 
         new mapboxgl.Marker(el)
           .setLngLat([module.longitude, module.latitude])
           .addTo(mapInstance);
+
+        rootsRef.current.push(root);
       }
     });
   }, [baseStations, sensorModules]);
@@ -167,9 +180,7 @@ export default function MapPage() {
                   setSelectedType("sensor-module");
                 }}
               >
-                <SensorModuleCard 
-                  module={module}
-                />
+                <SensorModuleCard module={module} />
               </div>
             ))}
           </div>
@@ -184,9 +195,13 @@ export default function MapPage() {
               <BaseStationDialog baseStation={selectedModule as BaseStation} />
             )}
             {selectedType === "sensor-module" && selectedModule && (
-              <SensorModuleDialog 
+              <SensorModuleDialog
                 module={selectedModule as SensorModule}
-                setNavigationURL={setNavigationURL as React.Dispatch<React.SetStateAction<string | null>>}
+                setNavigationURL={
+                  setNavigationURL as React.Dispatch<
+                    React.SetStateAction<string | null>
+                  >
+                }
               />
             )}
           </DialogContent>
