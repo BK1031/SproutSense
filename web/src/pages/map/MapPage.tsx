@@ -22,10 +22,12 @@ import SensorModuleCard from "@/components/modules/SensorModuleCard";
 import BaseStationDialog from "@/components/map/BaseStationCard";
 import SensorModuleDialog from "@/components/map/SensorModuleCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const refreshInterval = useRefreshInterval();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
@@ -38,6 +40,7 @@ export default function MapPage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
+  const [navigationURL, setNavigationURL] = useState<string | null>(null);
 
   const fetchModules = () => {
     try {
@@ -57,6 +60,16 @@ export default function MapPage() {
       toast(getAxiosErrorMessage(error));
     }
   };
+
+
+  useEffect(() => {
+    const navUrl = navigationURL;
+
+    console.log("this is my function", setNavigationURL); 
+    if(navUrl){
+      navigate(navUrl);
+    }
+  }, [navigationURL])
 
   useEffect(() => {
     fetchModules();
@@ -154,7 +167,9 @@ export default function MapPage() {
                   setSelectedType("sensor-module");
                 }}
               >
-                <SensorModuleCard module={module} />
+                <SensorModuleCard 
+                  module={module}
+                />
               </div>
             ))}
           </div>
@@ -169,7 +184,10 @@ export default function MapPage() {
               <BaseStationDialog baseStation={selectedModule as BaseStation} />
             )}
             {selectedType === "sensor-module" && selectedModule && (
-              <SensorModuleDialog module={selectedModule as SensorModule} />
+              <SensorModuleDialog 
+                module={selectedModule as SensorModule}
+                setNavigationURL={setNavigationURL as React.Dispatch<React.SetStateAction<string | null>>}
+              />
             )}
           </DialogContent>
         </Dialog>

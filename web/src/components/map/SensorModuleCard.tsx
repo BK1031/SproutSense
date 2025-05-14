@@ -20,10 +20,22 @@ import axios from "axios";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useEffect, useState } from "react";
 import { useRefreshInterval } from "@/lib/store";
-import { useNavigate } from "react-router-dom";
+// import { RelativeRoutingType } from "react-router-dom";
+// import type { Path } from 'react-router-dom';
+// import { useNavigate } from "react-router-dom";
 
-const SensorModuleCard = ({ module }: { module: SensorModule }) => {
-  const navigate = useNavigate();
+// interface SensorModuleCardProps {
+//   module: SensorModule;
+//   navigateTo: (navigationURl: {url: string}) => void;
+// }
+
+interface SensorModuleCardProps {
+  module: SensorModule;
+  setNavigationURL: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+const SensorModuleCard = ({ module, setNavigationURL }: SensorModuleCardProps)=>{
+  // const navigate = useNavigate();
   const [sensorData, setSensorData] = useState<{
     temperature: number;
     humidity: number;
@@ -63,6 +75,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
       toast(getAxiosErrorMessage(error));
     }
   };
+
 
   useEffect(() => {
     getCurrentSensorData();
@@ -176,7 +189,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/modules/${module.id}`)}
+            onClick={() => setNavigationURL("/query")}
           >
             <AreaChart className="mr-2 h-4 w-4" />
             Explore Data
@@ -184,7 +197,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/query/add?smid=${module.id}`)}
+            onClick={() => setNavigationURL("/query")}
           >
             <SearchCode className="mr-2 h-4 w-4" />
             Add to Query
