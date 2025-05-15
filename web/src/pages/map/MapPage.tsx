@@ -155,6 +155,34 @@ export default function MapPage() {
     setFocusedSensorModuleId(null);
   }, [sensorModules]);
 
+  // when clicking on sensor module or base station card, set the map to the location of the module
+  useEffect(() => {
+    if (!selectedModule) return;
+    if (selectedType === "sensor-module") {
+      const target = sensorModules.find((m) => m.id === selectedModule.id);
+      if (target) {
+        map.current?.flyTo({
+          center: [target.longitude, target.latitude],
+          zoom: 16,
+          essential: true,
+        });
+        const markerEl = document.querySelector(`[data-marker-id="${target.id}"]`);
+        if (markerEl) (markerEl as HTMLElement).click();
+      }
+    } else if (selectedType === "base-station") {
+      const target = baseStations.find((b) => b.id === selectedModule.id);
+      if (target) {
+        map.current?.flyTo({
+          center: [target.longitude, target.latitude],
+          zoom: 16,
+          essential: true,
+        });
+        const markerEl = document.querySelector(`[data-marker-id="${target.id}"]`);
+        if (markerEl) (markerEl as HTMLElement).click();
+      }
+    }
+  }, [selectedModule, selectedType]);
+
   return (
     <Layout activeTab="map" headerTitle="Map">
       <div className="relative h-full w-full">
