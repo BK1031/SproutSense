@@ -41,12 +41,7 @@ export function useAlerts() {
         },
       });
 
-      const data: {
-        smid: number;
-        name: string;
-        value: number;
-        created_at: string;
-      }[] = res.data;
+      const data: Record<string, any>[] = res.data;
 
       console.log("Raw sensor API response:", data);
 
@@ -69,7 +64,7 @@ export function useAlerts() {
       
           if (value === undefined) {
             console.log(`⚠️ No value for sensor "${sensorName}" in row`, row);
-            continue;
+          const value = row[sensorName] as number | undefined;
           }
       
           console.log(`SM ${smid} - ${sensorName}: ${value}`);

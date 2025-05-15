@@ -6,7 +6,11 @@ import {
   MAPBOX_LIGHT_STYLE,
 } from "@/consts/config";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
-import { useRefreshInterval } from "@/lib/store";
+import {
+  useRefreshInterval,
+  getFocusedSensorModuleId,
+  setFocusedSensorModuleId,
+} from "@/lib/store";
 import { BaseStation } from "@/models/base-station";
 import { SensorModule } from "@/models/sensor-module";
 import axios from "axios";
@@ -31,17 +35,12 @@ export default function MapPage() {
   const refreshInterval = useRefreshInterval();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
-  const [selectedModule, setSelectedModule] = useState<
-    BaseStation | SensorModule | null
-  >(null);
-  const [selectedType, setSelectedType] = useState<
-    "base-station" | "sensor-module" | null
-  >(null);
+  const [selectedModule, setSelectedModule] = useState<BaseStation | SensorModule | null>(null);
+  const [selectedType, setSelectedType] = useState<"base-station" | "sensor-module" | null>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
   const [navigationURL, setNavigationURL] = useState<string | null>(null);
-  // const markersRef = useRef<{marker: mapboxgl.Marker, root: ReturnType<typeof createRoot>}[]>([]);
   const rootsRef = useRef<ReturnType<typeof createRoot>[]>([]);
 
   const fetchModules = () => {
@@ -64,13 +63,9 @@ export default function MapPage() {
   };
 
   useEffect(() => {
-    const navUrl = navigationURL;
-
-    if (navUrl) {
-      rootsRef.current.forEach((root) => {
-        root.unmount();
-      });
-      navigate(navUrl);
+    if (navigationURL) {
+      rootsRef.current.forEach((root) => root.unmount());
+      navigate(navigationURL);
     }
   }, [navigationURL]);
 
@@ -90,22 +85,17 @@ export default function MapPage() {
       style: theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE,
     });
 
-    // Add navigation controls
     mapInstance.addControl(new mapboxgl.NavigationControl(), "top-right");
     mapInstance.addControl(new mapboxgl.GeolocateControl(), "top-right");
 
     map.current = mapInstance;
 
-    return () => {
-      mapInstance.remove();
-    };
+    return () => mapInstance.remove();
   }, []);
 
   useEffect(() => {
     if (map.current) {
-      map.current.setStyle(
-        theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE,
-      );
+      map.current.setStyle(theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE);
     }
   }, [theme]);
 
@@ -113,52 +103,63 @@ export default function MapPage() {
     const mapInstance = map.current;
     if (!mapInstance) return;
 
-    // Clear existing markers
     const markers = document.querySelectorAll(".mapboxgl-marker");
     markers.forEach((marker) => marker.remove());
 
-    // Add base station markers
     baseStations.forEach((station) => {
       if (station.latitude && station.longitude) {
         const el = document.createElement("div");
         const root = createRoot(el);
         root.render(<MapMarker data={station} type="base-station" />);
 
-        new mapboxgl.Marker(el)
-          .setLngLat([station.longitude, station.latitude])
-          .addTo(mapInstance);
-
+        new mapboxgl.Marker(el).setLngLat([station.longitude, station.latitude]).addTo(mapInstance);
         rootsRef.current.push(root);
       }
     });
 
-    // Add sensor module markers
     sensorModules.forEach((module) => {
       if (module.latitude && module.longitude) {
         const el = document.createElement("div");
+        el.dataset.markerId = module.id.toString();
         const root = createRoot(el);
         root.render(
           <MapMarker
             data={module}
             type="sensor-module"
             setNavigationURL={setNavigationURL}
-          />,
+            forceOpen={module.id === getFocusedSensorModuleId()}
+          />
         );
-
-        new mapboxgl.Marker(el)
-          .setLngLat([module.longitude, module.latitude])
-          .addTo(mapInstance);
-
+        new mapboxgl.Marker(el).setLngLat([module.longitude, module.latitude]).addTo(mapInstance);
         rootsRef.current.push(root);
       }
     });
   }, [baseStations, sensorModules]);
 
+  useEffect(() => {
+    const id = getFocusedSensorModuleId();
+    if (!map.current || !id) return;
+
+    const target = sensorModules.find((m) => m.id === id);
+    if (!target) return;
+
+    map.current.flyTo({
+      center: [target.longitude, target.latitude],
+      zoom: 16,
+      essential: true,
+    });
+
+    const markerEl = document.querySelector(`[data-marker-id="${id}"]`);
+    if (markerEl) (markerEl as HTMLElement).click();
+
+    setFocusedSensorModuleId(null);
+  }, [sensorModules]);
+
   return (
     <Layout activeTab="map" headerTitle="Map">
       <div className="relative h-full w-full">
-        <div className="absolute left-0 top-0 z-10 hidden h-full w-[450px] overflow-y-auto p-4 lg:flex">
-          <div className="flex flex-col gap-4">
+        <div className="absolute left-0 top-0 z-10 w-[450px] lg:flex pointer-events-none">
+          <div className="flex flex-col gap-4 p-4 pointer-events-auto">
             {baseStations.map((station) => (
               <div
                 key={station.id}
@@ -186,10 +187,7 @@ export default function MapPage() {
           </div>
         </div>
         <div ref={mapContainer} className="h-full w-full" />
-        <Dialog
-          open={!!selectedModule}
-          onOpenChange={() => setSelectedModule(null)}
-        >
+        <Dialog open={!!selectedModule} onOpenChange={() => setSelectedModule(null)}>
           <DialogContent className="max-w-2xl p-0">
             {selectedType === "base-station" && selectedModule && (
               <BaseStationDialog baseStation={selectedModule as BaseStation} />
@@ -197,11 +195,7 @@ export default function MapPage() {
             {selectedType === "sensor-module" && selectedModule && (
               <SensorModuleDialog
                 module={selectedModule as SensorModule}
-                setNavigationURL={
-                  setNavigationURL as React.Dispatch<
-                    React.SetStateAction<string | null>
-                  >
-                }
+                setNavigationURL={setNavigationURL}
               />
             )}
           </DialogContent>

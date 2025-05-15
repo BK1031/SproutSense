@@ -5,6 +5,8 @@ import { useTheme } from "@/components/theme-provider";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAlerts } from "@/hooks/useAlerts";
+import { useNavigate } from "react-router-dom";
+import { setFocusedSensorModuleId } from "@/lib/store";
 
 interface HeaderProps {
   className?: string;
@@ -15,6 +17,7 @@ interface HeaderProps {
 
 const Header = (props: HeaderProps) => {
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const { alerts, dismissAlerts, fetchSensorData, loading } = useAlerts();
   //const [showAlerts, setShowAlerts] = useState(true);
 
@@ -60,9 +63,26 @@ const Header = (props: HeaderProps) => {
             {hasAlerts ? (
               <>
                 <ul className="list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400">
-                  {alerts.map((alert, idx) => (
-                    <li key={idx}>{alert}</li>
-                  ))}
+                  {alerts.map((alert, idx) => {
+                    const match = alert.match(/SM (\d+)/); // Extract SM ID from alert text
+                    const smid = match ? parseInt(match[1]) : null;
+
+                    return (
+                      <li key={idx}>
+                        <button
+                          onClick={() => {
+                            if (smid) {
+                              setFocusedSensorModuleId(smid); // Focus on this sensor module
+                              navigate("/map"); // Go to the map
+                            }
+                          }}
+                          className="underline text-left hover:text-red-800"
+                        >
+                          {alert}
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <Button
                   size="sm"
