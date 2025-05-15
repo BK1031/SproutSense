@@ -46,7 +46,7 @@ export function AIRecommendationCard() {
 
     setLoading(true);
     try {
-      // 1. Fetch base station info (assuming ID = 1)
+      // 1. Fetch base station info (assuming ID = 2)
       const baseRes = await axios.get(`${BACKEND_URL}/base-station/2`);
       const { latitude, longitude } = baseRes.data;
 
