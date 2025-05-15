@@ -33,34 +33,64 @@ export function useAlerts() {
   const fetchSensorData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BACKEND_URL}/query/latest`, {
+      console.log("Fetching sensor data...");
+      const res = await axios.get(`${BACKEND_URL}/query/latest-per-module`, {
         params: {
           sensors:
             "temperature,humidity,lux,nitrogen,phosphorus,potassium,soil_moisture",
         },
       });
 
-      const latestData = { ...res.data };
-      delete latestData.created_at;
+      const data: {
+        smid: number;
+        name: string;
+        value: number;
+        created_at: string;
+      }[] = res.data;
 
-      const thresholds = plantThresholds[selectedPlant];
-      if (!thresholds) return;
+      console.log("Raw sensor API response:", data);
 
-      const outOfRange = Object.entries(thresholds).reduce<string[]>((acc, [key, range]) => {
-        const value = latestData[key];
-        if (value === undefined) return acc;
-        if (value < range.min || value > range.max) {
-          acc.push(`${key} is ${value}, expected between ${range.min} and ${range.max}`);
+      const fallbackPlant = Object.keys(plantThresholds)[0];
+      const plantName = selectedPlant || fallbackPlant;
+      const thresholds = plantThresholds[plantName];
+      if (!thresholds) {
+        console.warn("No thresholds found for plant:", plantName);
+        return;
+      }
+
+      const outOfRange: string[] = [];
+
+      for (const row of data) {
+        const smid = row.smid;
+      
+        for (const sensorName of Object.keys(thresholds)) {
+          const value = row[sensorName];
+          const range = thresholds[sensorName];
+      
+          if (value === undefined) {
+            console.log(`⚠️ No value for sensor "${sensorName}" in row`, row);
+            continue;
+          }
+      
+          console.log(`SM ${smid} - ${sensorName}: ${value}`);
+      
+          if (value < range.min || value > range.max) {
+            console.log(`→ OUT OF RANGE! Expected ${range.min}–${range.max}, got ${value}`);
+            outOfRange.push(
+              `SM ${smid} - ${sensorName} is ${value} (Expected: ${range.min}–${range.max})`
+            );
+          }
         }
-        return acc;
-      }, []);
+      }
+
+      console.log("Dismissed today?", isDismissedToday());
+      console.log("Final out-of-range alerts:", outOfRange);
 
       if (!isDismissedToday()) {
         setAlerts(outOfRange);
       } else {
         setAlerts([]);
       }
-      console.log("dismissed?", isDismissedToday());
     } catch (err) {
       console.error("Alert fetch failed:", err);
     } finally {

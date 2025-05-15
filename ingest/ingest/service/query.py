@@ -1,8 +1,9 @@
 import pandas as pd
 from ingest.database.db import get_db
 import numpy as np
-
 from ingest.service.sensor_module import get_all_sensor_modules
+
+
 
 def query_sensors(smid: int, sensors: list[str], start: str = None, end: str = None) -> list[pd.DataFrame]:
     """
@@ -271,3 +272,4 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
     merged['created_at'] = merged['created_at'].dt.round('s')
     
     return merged
+    

@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Request
 from typing import List
 import numpy as np
 from pydantic import BaseModel
-from ingest.service.query import merge_to_largest, query_latest_average_sensors, query_latest_sensors, query_sensors
+from ingest.service.query import merge_to_largest, query_latest_average_sensors, query_sensors, query_latest_sensors
+from ingest.service.sensor_module import get_all_sensor_modules
 import datetime
 
 router = APIRouter(
@@ -118,3 +119,28 @@ async def get_latest_timestamp(sensors: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/latest-per-module")
+async def get_latest_per_module(sensors: str = None):
+    if not sensors:
+        raise HTTPException(status_code=400, detail="Query parameter 'sensors' is required")
+
+    try:
+        sensor_list = sensors.split(",")
+        smids = [m.id for m in get_all_sensor_modules()]
+
+        results = []
+
+        for smid in smids:
+            df = query_latest_sensors(smid, sensor_list)
+            if not df.empty:
+                df["smid"] = smid # Add smid to the DataFrame
+                results.extend(df.to_dict(orient="records"))
+
+        return results
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    

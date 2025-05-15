@@ -7,6 +7,7 @@ from ingest.service.sensor_module import (
     update_sensor_module,
     delete_sensor_module
 )
+from ingest.service.query import query_latest_sensors
 import datetime
 router = APIRouter(
     prefix="/sensor-module",
@@ -81,3 +82,4 @@ async def delete_module(id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Sensor module not found")
     return {"message": "Sensor module deleted successfully"}
+
