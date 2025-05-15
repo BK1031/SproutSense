@@ -13,9 +13,10 @@ import BaseStationCard from "@/components/map/BaseStationCard";
 interface MapMarkerProps {
   data: BaseStation | SensorModule;
   type: "base-station" | "sensor-module";
+  setNavigationURL?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-export function MapMarker({ data, type }: MapMarkerProps) {
+export function MapMarker({ data, type, setNavigationURL }: MapMarkerProps) {
   const isOnline = () => {
     const lastPingTime = new Date(data.last_ping).getTime();
     const currentTime = new Date().getTime();
@@ -45,7 +46,16 @@ export function MapMarker({ data, type }: MapMarkerProps) {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" className="mb-2">
-        {type === "sensor-module" && <SensorModuleCard module={data} />}
+        {type === "sensor-module" && (
+          <SensorModuleCard
+            module={data}
+            setNavigationURL={
+              setNavigationURL as React.Dispatch<
+                React.SetStateAction<string | null>
+              >
+            }
+          />
+        )}
         {type === "base-station" && <BaseStationCard baseStation={data} />}
       </DropdownMenuContent>
     </DropdownMenu>
