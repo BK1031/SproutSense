@@ -22,10 +22,12 @@ import SensorModuleCard from "@/components/modules/SensorModuleCard";
 import BaseStationDialog from "@/components/map/BaseStationCard";
 import SensorModuleDialog from "@/components/map/SensorModuleCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
 export default function MapPage() {
+  const navigate = useNavigate();
   const refreshInterval = useRefreshInterval();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
@@ -38,6 +40,9 @@ export default function MapPage() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
+  const [navigationURL, setNavigationURL] = useState<string | null>(null);
+  // const markersRef = useRef<{marker: mapboxgl.Marker, root: ReturnType<typeof createRoot>}[]>([]);
+  const rootsRef = useRef<ReturnType<typeof createRoot>[]>([]);
 
   const fetchModules = () => {
     try {
@@ -57,6 +62,17 @@ export default function MapPage() {
       toast(getAxiosErrorMessage(error));
     }
   };
+
+  useEffect(() => {
+    const navUrl = navigationURL;
+
+    if (navUrl) {
+      rootsRef.current.forEach((root) => {
+        root.unmount();
+      });
+      navigate(navUrl);
+    }
+  }, [navigationURL]);
 
   useEffect(() => {
     fetchModules();
@@ -111,6 +127,8 @@ export default function MapPage() {
         new mapboxgl.Marker(el)
           .setLngLat([station.longitude, station.latitude])
           .addTo(mapInstance);
+
+        rootsRef.current.push(root);
       }
     });
 
@@ -119,11 +137,19 @@ export default function MapPage() {
       if (module.latitude && module.longitude) {
         const el = document.createElement("div");
         const root = createRoot(el);
-        root.render(<MapMarker data={module} type="sensor-module" />);
+        root.render(
+          <MapMarker
+            data={module}
+            type="sensor-module"
+            setNavigationURL={setNavigationURL}
+          />,
+        );
 
         new mapboxgl.Marker(el)
           .setLngLat([module.longitude, module.latitude])
           .addTo(mapInstance);
+
+        rootsRef.current.push(root);
       }
     });
   }, [baseStations, sensorModules]);
@@ -169,7 +195,14 @@ export default function MapPage() {
               <BaseStationDialog baseStation={selectedModule as BaseStation} />
             )}
             {selectedType === "sensor-module" && selectedModule && (
-              <SensorModuleDialog module={selectedModule as SensorModule} />
+              <SensorModuleDialog
+                module={selectedModule as SensorModule}
+                setNavigationURL={
+                  setNavigationURL as React.Dispatch<
+                    React.SetStateAction<string | null>
+                  >
+                }
+              />
             )}
           </DialogContent>
         </Dialog>

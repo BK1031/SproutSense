@@ -20,10 +20,16 @@ import axios from "axios";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useEffect, useState } from "react";
 import { useRefreshInterval } from "@/lib/store";
-import { useNavigate } from "react-router-dom";
 
-const SensorModuleCard = ({ module }: { module: SensorModule }) => {
-  const navigate = useNavigate();
+interface SensorModuleCardProps {
+  module: SensorModule;
+  setNavigationURL: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+const SensorModuleCard = ({
+  module,
+  setNavigationURL,
+}: SensorModuleCardProps) => {
   const [sensorData, setSensorData] = useState<{
     temperature: number;
     humidity: number;
@@ -176,7 +182,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/modules/${module.id}`)}
+            onClick={() => setNavigationURL(`/modules/${module.id}`)}
           >
             <AreaChart className="mr-2 h-4 w-4" />
             Explore Data
@@ -184,7 +190,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/query/add?smid=${module.id}`)}
+            onClick={() => setNavigationURL(`/query/add?smid=${module.id}`)}
           >
             <SearchCode className="mr-2 h-4 w-4" />
             Add to Query
