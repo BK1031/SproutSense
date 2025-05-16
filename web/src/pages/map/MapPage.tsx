@@ -64,83 +64,83 @@ export default function MapPage() {
     }
   };
 
-  const fetchSoilMoistureData = async () => {
-    try {
-      const response = await axios.get(
-        // `${BACKEND_URL}/query/latest?sensors=soil_moisture`
-        `${BACKEND_URL}/query/latest?sensors=humidity`
-      );
-      console.log(response)
-      if (response.data && response.data.soil_moisture) {
-        const moduleData = Object.values(response.data.soil_moisture);
+  // const fetchSoilMoistureData = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       // `${BACKEND_URL}/query/latest?sensors=soil_moisture`
+  //       `${BACKEND_URL}/query/latest?sensors=humidity`
+  //     );
+  //     console.log(response)
+  //     if (response.data && response.data.soil_moisture) {
+  //       const moduleData = Object.values(response.data.soil_moisture);
   
-        const points = Object.entries(moduleData)
-        .map(([moduleId, value]) => {
-          const module = sensorModules.find((m) => m.id === Number(moduleId));
-          if (!module || module.latitude == null || module.longitude == null) return null;
+  //       const points = Object.entries(moduleData)
+  //       .map(([moduleId, value]) => {
+  //         const module = sensorModules.find((m) => m.id === Number(moduleId));
+  //         if (!module || module.latitude == null || module.longitude == null) return null;
 
-          return {
-            latitude: module.latitude,
-            longitude: module.longitude,
-            value: Number(value)
-          };
-        })
+  //         return {
+  //           latitude: module.latitude,
+  //           longitude: module.longitude,
+  //           value: Number(value)
+  //         };
+  //       })
   
-        setSoilMoistureData(points);
-      }
-    } catch (error: any) {
-      toast(getAxiosErrorMessage(error));
-    }
-  };
-
-  // const fetchSoilMoistureData = () => { // fake data (for now)
-  //   if (sensorModules.length === 0) return;
-
-  //   const fakeData = [];
-
-  //   for (const module of sensorModules) {
-  //     if (module.latitude && module.longitude) {
-  //       fakeData.push({
-  //         latitude: module.latitude,
-  //         longitude: module.longitude,
-  //         value: Math.floor(Math.random() * 100) 
-  //       });
-        
-  //       // more data for around the area
-  //       for (let i = 0; i < 5; i++) {
-  //         const latOffset = (Math.random() - 0.5) * 0.001; 
-  //         const lngOffset = (Math.random() - 0.5) * 0.001;
-          
-  //         const baseValue = Math.floor(Math.random() * 100);
-  //         const variation = Math.floor(Math.random() * 20) - 10; // +/- 10 from base value
-  //         let value = baseValue + variation;
-  //         value = Math.max(0, Math.min(100, value));
-          
-  //         fakeData.push({
-  //           latitude: module.latitude + latOffset,
-  //           longitude: module.longitude + lngOffset,
-  //           value: value
-  //         });
-  //       }
+  //       setSoilMoistureData(points);
   //     }
+  //   } catch (error: any) {
+  //     toast(getAxiosErrorMessage(error));
   //   }
-  //   // if no modules, create data
-  //   if (fakeData.length === 0) {
-  //     const center = [-119.847055, 34.412933];
-  //     for (let i = 0; i < 20; i++) {
-  //       const latOffset = (Math.random() - 0.5) * 0.02;
-  //       const lngOffset = (Math.random() - 0.5) * 0.02;
-        
-  //       fakeData.push({
-  //         latitude: center[1] + latOffset,
-  //         longitude: center[0] + lngOffset,
-  //         value: Math.floor(Math.random() * 100)
-  //       });
-  //     }
-  //   }
-
-  //   setSoilMoistureData(fakeData);
   // };
+
+  const fetchSoilMoistureData = () => { // fake data (for now)
+    if (sensorModules.length === 0) return;
+
+    const fakeData = [];
+
+    for (const module of sensorModules) {
+      if (module.latitude && module.longitude) {
+        fakeData.push({
+          latitude: module.latitude,
+          longitude: module.longitude,
+          value: Math.floor(Math.random() * 100) 
+        });
+        
+        // more data for around the area
+        for (let i = 0; i < 5; i++) {
+          const latOffset = (Math.random() - 0.5) * 0.001; 
+          const lngOffset = (Math.random() - 0.5) * 0.001;
+          
+          const baseValue = Math.floor(Math.random() * 100);
+          const variation = Math.floor(Math.random() * 20) - 10; // +/- 10 from base value
+          let value = baseValue + variation;
+          value = Math.max(0, Math.min(100, value));
+          
+          fakeData.push({
+            latitude: module.latitude + latOffset,
+            longitude: module.longitude + lngOffset,
+            value: value
+          });
+        }
+      }
+    }
+    // if no modules, create data
+    if (fakeData.length === 0) {
+      const center = [-119.847055, 34.412933];
+      for (let i = 0; i < 20; i++) {
+        const latOffset = (Math.random() - 0.5) * 0.02;
+        const lngOffset = (Math.random() - 0.5) * 0.02;
+        
+        fakeData.push({
+          latitude: center[1] + latOffset,
+          longitude: center[0] + lngOffset,
+          value: Math.floor(Math.random() * 100)
+        });
+      }
+    }
+
+    setSoilMoistureData(fakeData);
+  };
 
   useEffect(() => {
     fetchModules();
