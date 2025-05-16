@@ -63,26 +63,30 @@ const Header = (props: HeaderProps) => {
             {hasAlerts ? (
               <>
                 <ul className="list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400">
-                  {alerts.map((alert, idx) => {
-                    const match = alert.match(/SM (\d+)/); // Extract SM ID from alert text
+                {(() => {
+                  const seen = new Set<number>();
+                  return alerts.map((alert, idx) => {
+                    const match = alert.match(/SM (\d+)/);
                     const smid = match ? parseInt(match[1]) : null;
+
+                    if (!smid || seen.has(smid)) return null;
+                    seen.add(smid);
 
                     return (
                       <li key={idx}>
                         <button
                           onClick={() => {
-                            if (smid) {
-                              setFocusedSensorModuleId(smid); // Focus on this sensor module
-                              navigate("/map"); // Go to the map
-                            }
+                            setFocusedSensorModuleId(smid);
+                            navigate("/map");
                           }}
                           className="underline text-left hover:text-red-800"
                         >
-                          {alert}
+                          Problem on Sensor Module {smid}
                         </button>
                       </li>
                     );
-                  })}
+                  });
+                })()}
                 </ul>
                 <Button
                   size="sm"

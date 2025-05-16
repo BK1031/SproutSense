@@ -20,6 +20,7 @@ import axios from "axios";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useEffect, useState } from "react";
 import { useRefreshInterval } from "@/lib/store";
+import { useAlerts } from "@/hooks/useAlerts";
 
 interface SensorModuleCardProps {
   module: SensorModule;
@@ -48,6 +49,8 @@ const SensorModuleCard = ({
     potassium: 0,
   });
   const refreshInterval = useRefreshInterval();
+  const { alerts } = useAlerts();
+  const moduleAlerts = alerts.filter((msg) => msg.includes(`SM ${module.id} `));
 
   const getOnlineStatus = () => {
     const lastPingTime = new Date(module.last_ping + "Z").getTime();
@@ -176,6 +179,18 @@ const SensorModuleCard = ({
             </Card>
           </div>
         </div>
+        {moduleAlerts.length > 0 && (
+          <div className="space-y-2 p-4 border-t border-red-200 dark:border-red-800">
+            <h4 className="text-sm font-medium text-red-600 dark:text-red-400">
+              Issues Detected
+            </h4>
+            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-400">
+              {moduleAlerts.map((alert, idx) => (
+                <li key={idx}>{alert}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       <div className="p-4">
         <div className="flex gap-2">
