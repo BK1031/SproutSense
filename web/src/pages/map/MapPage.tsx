@@ -67,8 +67,7 @@ export default function MapPage() {
   // const fetchSoilMoistureData = async () => {
   //   try {
   //     const response = await axios.get(
-  //       // `${BACKEND_URL}/query/latest?sensors=soil_moisture`
-  //       `${BACKEND_URL}/query/latest?sensors=humidity`
+  //       `${BACKEND_URL}/query/latest?sensors=soil_moisture`
   //     );
   //     console.log(response)
   //     if (response.data && response.data.soil_moisture) {
@@ -103,44 +102,29 @@ export default function MapPage() {
         fakeData.push({
           latitude: module.latitude,
           longitude: module.longitude,
-          value: Math.floor(Math.random() * 100) 
-        });
-        
-        // more data for around the area
-        for (let i = 0; i < 5; i++) {
-          const latOffset = (Math.random() - 0.5) * 0.001; 
-          const lngOffset = (Math.random() - 0.5) * 0.001;
-          
-          const baseValue = Math.floor(Math.random() * 100);
-          const variation = Math.floor(Math.random() * 20) - 10; // +/- 10 from base value
-          let value = baseValue + variation;
-          value = Math.max(0, Math.min(100, value));
-          
-          fakeData.push({
-            latitude: module.latitude + latOffset,
-            longitude: module.longitude + lngOffset,
-            value: value
-          });
-        }
-      }
-    }
-    // if no modules, create data
-    if (fakeData.length === 0) {
-      const center = [-119.847055, 34.412933];
-      for (let i = 0; i < 20; i++) {
-        const latOffset = (Math.random() - 0.5) * 0.02;
-        const lngOffset = (Math.random() - 0.5) * 0.02;
-        
-        fakeData.push({
-          latitude: center[1] + latOffset,
-          longitude: center[0] + lngOffset,
-          value: Math.floor(Math.random() * 100)
+          value: Math.floor(Math.random() * 100) // it will keep changing color because instead of actually pulling from soil moisture, just using random generate values as fake data
         });
       }
     }
+    
+    // // if no modules, create some fake data points
+    // if (fakeData.length === 0) {
+    //   const center = [-119.847055, 34.412933];
+    //   for (let i = 0; i < 10; i++) {
+    //     const latOffset = (Math.random() - 0.5) * 0.02;
+    //     const lngOffset = (Math.random() - 0.5) * 0.02;
+        
+    //     fakeData.push({
+    //       latitude: center[1] + latOffset,
+    //       longitude: center[0] + lngOffset,
+    //       value: Math.floor(Math.random() * 100)
+    //     });
+    //   }
+    // }
 
     setSoilMoistureData(fakeData);
   };
+
 
   useEffect(() => {
     fetchModules();
@@ -184,57 +168,27 @@ export default function MapPage() {
       });
       
       mapInstance.addLayer({
-        id: 'soil-moisture-heat',
-        type: 'heatmap',
+        id: 'soil-moisture-values',
+        type: 'circle',
         source: 'soil-moisture',
         layout: {
           visibility: 'none'
         },
         paint: {
-          // increase the heatmap weight based on soil moisture value
-          'heatmap-weight': [
+          'circle-radius': 20,
+          'circle-color': [
             'interpolate',
             ['linear'],
             ['get', 'value'],
-            0, 0,
-            100, 1
+            0, '#d7191c',    // Very dry - red
+            25, '#fdae61',   // Dry - orange
+            50, '#ffffbf',   // Medium - yellow
+            75, '#abd9e9',   // Moist - light blue
+            100, '#2c7bb6'   // Very wet - dark blue
           ],
-          // increase the heatmap color weight weight by zoom level
-          'heatmap-intensity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            8, 1,
-            15, 3
-          ],
-          // color ramp for heatmap from dry (red) to wet (blue)
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            0, 'rgba(255,255,255,0)',
-            0.2, 'rgb(253,210,145)',
-            0.4, 'rgb(250,173,101)',
-            0.6, 'rgb(179,205,227)',
-            0.8, 'rgb(120,167,194)',
-            1, 'rgb(67,147,195)'
-          ],
-          // adjust the heatmap radius by zoom level
-          'heatmap-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            10, 15,
-            16, 40
-          ],
-          // transition from heatmap to circle layer by zoom level
-          'heatmap-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            10, 1,
-            16, 0.6
-          ],
+          'circle-opacity': 0.7,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#ffffff'
         }
       });
     });
@@ -312,7 +266,7 @@ export default function MapPage() {
       
       // Show or hide the layer based on toggle state
       mapInstance.setLayoutProperty(
-        'soil-moisture-heat',
+        'soil-moisture-values',
         'visibility',
         showHeatmap ? 'visible' : 'none'
       );
