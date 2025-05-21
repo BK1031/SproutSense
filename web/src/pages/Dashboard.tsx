@@ -5,7 +5,6 @@ import { CurrentNPKCard } from "@/components/dashboard/CurrentNPKCard";
 import { CurrentSoilMoistureCard } from "@/components/dashboard/CurrentSoilMoistureCard";
 import { CurrentLuxCard } from "@/components/dashboard/CurrentLuxCard";
 import { AIRecommendationCard } from "@/components/dashboard/AiRecommendationCard";
-import { ThresholdAlertCard } from "@/components/dashboard/ThresholdAlertCard";
 import { Widget } from "@/components/dashboard/Widget";
 import { Leaf, Droplets, Sun } from "lucide-react";
 

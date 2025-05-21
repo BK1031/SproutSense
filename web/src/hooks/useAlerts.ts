@@ -23,13 +23,6 @@ function isSnoozed(smid: number): boolean {
   return new Date(until) > new Date();
 }
 
-function snoozeModule(smid: number, durationMinutes: number) {
-  const snoozedUntil = getSnoozedUntil();
-  const until = new Date(Date.now() + durationMinutes * 60 * 1000);
-  snoozedUntil[smid] = until.toISOString();
-  localStorage.setItem(SNOOZE_KEY, JSON.stringify(snoozedUntil));
-}
-
 function isDangerouslyOutOfRange(
   value: number,
   min: number,
