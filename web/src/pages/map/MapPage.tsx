@@ -35,8 +35,12 @@ export default function MapPage() {
   const refreshInterval = useRefreshInterval();
   const [sensorModules, setSensorModules] = useState<SensorModule[]>([]);
   const [baseStations, setBaseStations] = useState<BaseStation[]>([]);
-  const [selectedModule, setSelectedModule] = useState<BaseStation | SensorModule | null>(null);
-  const [selectedType, setSelectedType] = useState<"base-station" | "sensor-module" | null>(null);
+  const [selectedModule, setSelectedModule] = useState<
+    BaseStation | SensorModule | null
+  >(null);
+  const [selectedType, setSelectedType] = useState<
+    "base-station" | "sensor-module" | null
+  >(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { theme } = useTheme();
@@ -95,7 +99,9 @@ export default function MapPage() {
 
   useEffect(() => {
     if (map.current) {
-      map.current.setStyle(theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE);
+      map.current.setStyle(
+        theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE,
+      );
     }
   }, [theme]);
 
@@ -112,7 +118,9 @@ export default function MapPage() {
         const root = createRoot(el);
         root.render(<MapMarker data={station} type="base-station" />);
 
-        new mapboxgl.Marker(el).setLngLat([station.longitude, station.latitude]).addTo(mapInstance);
+        new mapboxgl.Marker(el)
+          .setLngLat([station.longitude, station.latitude])
+          .addTo(mapInstance);
         rootsRef.current.push(root);
       }
     });
@@ -128,9 +136,11 @@ export default function MapPage() {
             type="sensor-module"
             setNavigationURL={setNavigationURL}
             forceOpen={module.id === getFocusedSensorModuleId()}
-          />
+          />,
         );
-        new mapboxgl.Marker(el).setLngLat([module.longitude, module.latitude]).addTo(mapInstance);
+        new mapboxgl.Marker(el)
+          .setLngLat([module.longitude, module.latitude])
+          .addTo(mapInstance);
         rootsRef.current.push(root);
       }
     });
@@ -166,7 +176,9 @@ export default function MapPage() {
           zoom: 16,
           essential: true,
         });
-        const markerEl = document.querySelector(`[data-marker-id="${target.id}"]`);
+        const markerEl = document.querySelector(
+          `[data-marker-id="${target.id}"]`,
+        );
         if (markerEl) (markerEl as HTMLElement).click();
       }
     } else if (selectedType === "base-station") {
@@ -177,7 +189,9 @@ export default function MapPage() {
           zoom: 16,
           essential: true,
         });
-        const markerEl = document.querySelector(`[data-marker-id="${target.id}"]`);
+        const markerEl = document.querySelector(
+          `[data-marker-id="${target.id}"]`,
+        );
         if (markerEl) (markerEl as HTMLElement).click();
       }
     }
@@ -186,8 +200,8 @@ export default function MapPage() {
   return (
     <Layout activeTab="map" headerTitle="Map">
       <div className="relative h-full w-full">
-        <div className="absolute left-0 top-0 z-10 w-[450px] lg:flex pointer-events-none">
-          <div className="flex flex-col gap-4 p-4 pointer-events-auto">
+        <div className="pointer-events-none absolute left-0 top-0 z-10 w-[450px] lg:flex">
+          <div className="pointer-events-auto flex flex-col gap-4 p-4">
             {baseStations.map((station) => (
               <div
                 key={station.id}
@@ -215,7 +229,10 @@ export default function MapPage() {
           </div>
         </div>
         <div ref={mapContainer} className="h-full w-full" />
-        <Dialog open={!!selectedModule} onOpenChange={() => setSelectedModule(null)}>
+        <Dialog
+          open={!!selectedModule}
+          onOpenChange={() => setSelectedModule(null)}
+        >
           <DialogContent className="max-w-2xl p-0">
             {selectedType === "base-station" && selectedModule && (
               <BaseStationDialog baseStation={selectedModule as BaseStation} />

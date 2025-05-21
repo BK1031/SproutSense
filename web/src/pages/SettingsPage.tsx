@@ -1,6 +1,12 @@
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import rawThresholds from "@/data/plant_thresholds.json";
 import { usePlant } from "@/context/plantContext";
 
@@ -15,7 +21,7 @@ export default function SettingsPage() {
 
   return (
     <Layout activeTab="settings" headerTitle="Settings">
-      <div className="p-8 pb-14 space-y-6">
+      <div className="space-y-6 p-8 pb-14">
         <Card className="w-full max-w-lg">
           <CardHeader>
             <CardTitle>Plant Type</CardTitle>

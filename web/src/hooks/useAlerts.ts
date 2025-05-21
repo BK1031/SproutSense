@@ -9,31 +9,46 @@ const plantThresholds = rawThresholds as Record<
   Record<string, { min: number; max: number }>
 >;
 
-const DISMISS_KEY = "sensor_alerts_dismissed_at";
+const SNOOZE_KEY = "sensor_alerts_snoozed_until";
 
-function isDismissedToday(): boolean {
-  const stored = localStorage.getItem(DISMISS_KEY);
-  if (!stored) return false;
+function getSnoozedUntil(): Record<number, string> {
+  const raw = localStorage.getItem(SNOOZE_KEY);
+  return raw ? JSON.parse(raw) : {};
+}
 
-  const lastDismissed = new Date(stored);
-  const now = new Date();
+function isSnoozed(smid: number): boolean {
+  const snoozedUntil = getSnoozedUntil();
+  const until = snoozedUntil[smid];
+  if (!until) return false;
+  return new Date(until) > new Date();
+}
 
-  return (
-    lastDismissed.getDate() === now.getDate() &&
-    lastDismissed.getMonth() === now.getMonth() &&
-    lastDismissed.getFullYear() === now.getFullYear()
-  );
+function snoozeModule(smid: number, durationMinutes: number) {
+  const snoozedUntil = getSnoozedUntil();
+  const until = new Date(Date.now() + durationMinutes * 60 * 1000);
+  snoozedUntil[smid] = until.toISOString();
+  localStorage.setItem(SNOOZE_KEY, JSON.stringify(snoozedUntil));
+}
+
+function isDangerouslyOutOfRange(
+  value: number,
+  min: number,
+  max: number,
+): boolean {
+  const margin = (max - min) * 0.5;
+  return value < min - margin || value > max + margin;
 }
 
 export function useAlerts() {
   const [alerts, setAlerts] = useState<string[]>([]);
+  const [criticalAlerts, setCriticalAlerts] = useState<string[]>([]);
+  const [allAlerts, setAllAlerts] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { selectedPlant } = usePlant();
 
   const fetchSensorData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching sensor data...");
       const res = await axios.get(`${BACKEND_URL}/query/latest-per-module`, {
         params: {
           sensors:
@@ -42,50 +57,42 @@ export function useAlerts() {
       });
 
       const data: Record<string, any>[] = res.data;
-
-      console.log("Raw sensor API response:", data);
-
-      const fallbackPlant = Object.keys(plantThresholds)[0];
-      const plantName = selectedPlant || fallbackPlant;
+      const plantName = selectedPlant || Object.keys(plantThresholds)[0];
       const thresholds = plantThresholds[plantName];
-      if (!thresholds) {
-        console.warn("No thresholds found for plant:", plantName);
-        return;
-      }
+      if (!thresholds) return;
 
-      const outOfRange: string[] = [];
+      const visibleAlerts: string[] = [];
+      const critical: string[] = [];
+      const all: string[] = [];
 
       for (const row of data) {
         const smid = row.smid;
-      
         for (const sensorName of Object.keys(thresholds)) {
           const value = row[sensorName];
+          if (value === undefined) continue;
+
           const range = thresholds[sensorName];
-      
-          if (value === undefined) {
-            console.log(`⚠️ No value for sensor "${sensorName}" in row`, row);
-          const value = row[sensorName] as number | undefined;
-          }
-      
-          console.log(`SM ${smid} - ${sensorName}: ${value}`);
-      
-          if (value < range.min || value > range.max) {
-            console.log(`→ OUT OF RANGE! Expected ${range.min}–${range.max}, got ${value}`);
-            outOfRange.push(
-              `SM ${smid} - ${sensorName} is ${value} (Expected: ${range.min}–${range.max})`
-            );
+          const isOut = value < range.min || value > range.max;
+          const isCritical = isDangerouslyOutOfRange(
+            value,
+            range.min,
+            range.max,
+          );
+          const msg = `SM ${smid} - ${sensorName} is ${value} (Expected: ${range.min}–${range.max})`;
+
+          if (isOut || isCritical) all.push(msg); // all alerts (for cards)
+
+          if (isCritical) {
+            critical.push(msg); // always show critical
+          } else if (isOut && !isSnoozed(smid)) {
+            visibleAlerts.push(msg); // dismissible and not snoozed
           }
         }
       }
 
-      console.log("Dismissed today?", isDismissedToday());
-      console.log("Final out-of-range alerts:", outOfRange);
-
-      if (!isDismissedToday()) {
-        setAlerts(outOfRange);
-      } else {
-        setAlerts([]);
-      }
+      setAlerts(visibleAlerts);
+      setCriticalAlerts(critical);
+      setAllAlerts(all);
     } catch (err) {
       console.error("Alert fetch failed:", err);
     } finally {
@@ -97,10 +104,25 @@ export function useAlerts() {
     fetchSensorData();
   }, [fetchSensorData]);
 
-  const dismissAlerts = () => {
-    localStorage.setItem(DISMISS_KEY, new Date().toISOString());
-    setAlerts([]);
+  const dismissAlerts = (
+    smid: number,
+    durationMinutes?: number,
+    until?: Date,
+  ) => {
+    const snoozedUntil = getSnoozedUntil();
+    const targetDate =
+      until ?? new Date(Date.now() + (durationMinutes ?? 60) * 60 * 1000);
+    snoozedUntil[smid] = targetDate.toISOString();
+    localStorage.setItem(SNOOZE_KEY, JSON.stringify(snoozedUntil));
+    setAlerts((prev) => prev.filter((a) => !a.includes(`SM ${smid} `)));
   };
 
-  return { alerts, loading, dismissAlerts, fetchSensorData };
+  return {
+    alerts,
+    criticalAlerts,
+    allAlerts, // ← for use in cards
+    loading,
+    dismissAlerts,
+    fetchSensorData,
+  };
 }

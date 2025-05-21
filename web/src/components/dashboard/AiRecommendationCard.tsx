@@ -68,7 +68,7 @@ export function AIRecommendationCard() {
 
   return (
     <Card className="h-[200px] w-full p-2">
-      <CardHeader className="flex flex-row items-center justify-between pb-1 px-2">
+      <CardHeader className="flex flex-row items-center justify-between px-2 pb-1">
         <CardTitle className="flex flex-row items-center gap-1 text-lg">
           <Bot className="h-4 w-4 text-muted-foreground" />
           <span className="font-semibold">AI Recommendation</span>
@@ -82,7 +82,7 @@ export function AIRecommendationCard() {
           Refresh
         </Button>
       </CardHeader>
-      <CardContent className="grid gap-1 pt-0 px-2">
+      <CardContent className="grid gap-1 px-2 pt-0">
         {loading ? (
           <span className="text-sm font-medium">Loading...</span>
         ) : recommendation ? (
@@ -90,7 +90,9 @@ export function AIRecommendationCard() {
             {recommendation}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground">No prediction yet</span>
+          <span className="text-xs text-muted-foreground">
+            No prediction yet
+          </span>
         )}
         {avgMoisture !== null && avgTemperature !== null && (
           <div className="grid gap-2">

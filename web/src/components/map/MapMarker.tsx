@@ -18,7 +18,12 @@ interface MapMarkerProps {
   forceOpen?: boolean;
 }
 
-export function MapMarker({ data, type, setNavigationURL, forceOpen }: MapMarkerProps) {
+export function MapMarker({
+  data,
+  type,
+  setNavigationURL,
+  forceOpen,
+}: MapMarkerProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -45,7 +50,11 @@ export function MapMarker({ data, type, setNavigationURL, forceOpen }: MapMarker
           }`}
         >
           <div className="absolute inset-0 flex items-center justify-center text-white">
-            {type === "base-station" ? <Satellite size={14} /> : <Leaf size={14} />}
+            {type === "base-station" ? (
+              <Satellite size={14} />
+            ) : (
+              <Leaf size={14} />
+            )}
           </div>
         </div>
       </DropdownMenuTrigger>

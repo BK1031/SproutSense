@@ -20,11 +20,15 @@ export function ThresholdAlertCard() {
 
       <CardContent className="space-y-4">
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading sensor data...</p>
+          <p className="text-sm text-muted-foreground">
+            Loading sensor data...
+          </p>
         ) : alerts.length > 0 ? (
           <>
-            <p className="text-sm font-medium text-red-600 dark:text-red-400">Alerts:</p>
-            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">
+              Alerts:
+            </p>
+            <ul className="list-inside list-disc text-sm text-red-600 dark:text-red-400">
               {alerts.map((msg, idx) => (
                 <li key={idx}>{msg}</li>
               ))}
