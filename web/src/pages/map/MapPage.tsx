@@ -74,22 +74,23 @@ export default function MapPage() {
   const fetchSoilMoistureData = async () => {
     try {
       const response = await axios.get(
-        `${BACKEND_URL}/query/latest?sensors=soil_moisture`
+        `${BACKEND_URL}/query/latest?sensors=soil_moisture`,
       );
-      console.log(response)
+      console.log(response);
       if (response.data && response.data.soil_moisture) {
-      const value = response.data.soil_moisture;
+        const value = response.data.soil_moisture;
 
-      const points = sensorModules
-        .filter((module) => module.latitude != null && module.longitude != null)
-        .map((module) => ({
-          latitude: module.latitude,
-          longitude: module.longitude,
-          value: value 
-        }));
+        const points = sensorModules
+          .filter(
+            (module) => module.latitude != null && module.longitude != null,
+          )
+          .map((module) => ({
+            latitude: module.latitude,
+            longitude: module.longitude,
+            value: value,
+          }));
 
-      setSoilMoistureData(points);
-      
+        setSoilMoistureData(points);
       }
     } catch (error: any) {
       toast(getAxiosErrorMessage(error));
