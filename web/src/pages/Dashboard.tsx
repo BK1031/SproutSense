@@ -43,22 +43,33 @@ export default function Dashboard() {
           <Widget title="Current Lux" icon={Sun} width="300px" height="200px">
             <CurrentLuxCard />
           </Widget>
+
           <Widget
             title="AI Watering Recommendation"
             icon={Leaf}
             width="350px"
-            height="250px"
+            height="200px"
           >
             <AIRecommendationCard />
           </Widget>
-          <Widget
+
+          {/* <Widget
+            title="Threshold Alerts"
+            icon={Leaf}
+            width="350px"
+            height="300px"
+          >
+            <ThresholdAlertCard />
+          </Widget> */}
+
+          {/* <Widget
             title="Current Weather"
             icon={Leaf}
             width="615px"
             height="200px"
           >
             <div className="h-full w-full bg-sky-300">600x200</div>
-          </Widget>
+          </Widget> */}
         </div>
       </Layout>
     </>
