@@ -71,66 +71,29 @@ export default function MapPage() {
     }
   };
 
-  // const fetchSoilMoistureData = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `${BACKEND_URL}/query/latest?sensors=soil_moisture`
-  //     );
-  //     console.log(response)
-  //     if (response.data && response.data.soil_moisture) {
-  //       const moduleData = Object.values(response.data.soil_moisture);
+  const fetchSoilMoistureData = async () => {
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/query/latest?sensors=soil_moisture`
+      );
+      console.log(response)
+      if (response.data && response.data.soil_moisture) {
+      const value = response.data.soil_moisture;
 
-  //       const points = Object.entries(moduleData)
-  //       .map(([moduleId, value]) => {
-  //         const module = sensorModules.find((m) => m.id === Number(moduleId));
-  //         if (!module || module.latitude == null || module.longitude == null) return null;
-
-  //         return {
-  //           latitude: module.latitude,
-  //           longitude: module.longitude,
-  //           value: Number(value)
-  //         };
-  //       })
-
-  //       setSoilMoistureData(points);
-  //     }
-  //   } catch (error: any) {
-  //     toast(getAxiosErrorMessage(error));
-  //   }
-  // };
-
-  const fetchSoilMoistureData = () => {
-    // fake data (for now)
-    if (sensorModules.length === 0) return;
-
-    const fakeData = [];
-
-    for (const module of sensorModules) {
-      if (module.latitude && module.longitude) {
-        fakeData.push({
+      const points = sensorModules
+        .filter((module) => module.latitude != null && module.longitude != null)
+        .map((module) => ({
           latitude: module.latitude,
           longitude: module.longitude,
-          value: Math.floor(Math.random() * 100), // it will keep changing color because instead of actually pulling from soil moisture, just using random generate values as fake data
-        });
+          value: value 
+        }));
+
+      setSoilMoistureData(points);
+      
       }
+    } catch (error: any) {
+      toast(getAxiosErrorMessage(error));
     }
-
-    // // if no modules, create some fake data points
-    // if (fakeData.length === 0) {
-    //   const center = [-119.847055, 34.412933];
-    //   for (let i = 0; i < 10; i++) {
-    //     const latOffset = (Math.random() - 0.5) * 0.02;
-    //     const lngOffset = (Math.random() - 0.5) * 0.02;
-
-    //     fakeData.push({
-    //       latitude: center[1] + latOffset,
-    //       longitude: center[0] + lngOffset,
-    //       value: Math.floor(Math.random() * 100)
-    //     });
-    //   }
-    // }
-
-    setSoilMoistureData(fakeData);
   };
 
   useEffect(() => {
@@ -155,7 +118,7 @@ export default function MapPage() {
       );
       return () => clearInterval(interval);
     }
-  }, [showHeatmap, refreshInterval]);
+  }, [showHeatmap, refreshInterval, sensorModules]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
