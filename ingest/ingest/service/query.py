@@ -1,8 +1,9 @@
 import pandas as pd
 from ingest.database.db import get_db
 import numpy as np
-
 from ingest.service.sensor_module import get_all_sensor_modules
+
+
 
 def query_sensors(smid: int, sensors: list[str], start: str = None, end: str = None) -> list[pd.DataFrame]:
     """
@@ -37,9 +38,12 @@ def query_sensors(smid: int, sensors: list[str], start: str = None, end: str = N
         query += f"\nAND created_at < '{end}'"
 
     query += "\nORDER BY created_at ASC;"
-        
+
     db = get_db()
     result = pd.read_sql(query, db.bind)
+    # Convert created_at to datetime
+    result['created_at'] = pd.to_datetime(result['created_at'])
+
     return [
         result[result['name'] == sensor][['created_at', 'value']]
         .rename(columns={'value': sensor})
@@ -152,10 +156,6 @@ def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
     df = df.reset_index(drop=True)
 
     if method == 'ffill':
-        if df.iloc[0].isna().any():
-            print("there are nans in the first row")
-            first_row = df.iloc[0].fillna(0)
-            df.iloc[0] = first_row
         df = df.ffill()
     elif method == 'bfill':
         df = df.bfill()
@@ -169,6 +169,8 @@ def fill_nan(df: pd.DataFrame, method: str = 'ffill') -> pd.DataFrame:
     else:
         raise ValueError("Invalid fill method")
 
+    # Fill any remaining NaN values with 0
+    df = df.fillna(0)
     return df
 
 def merge_to_smallest(*dfs: pd.DataFrame) -> pd.DataFrame:
@@ -190,6 +192,7 @@ def merge_to_smallest(*dfs: pd.DataFrame) -> pd.DataFrame:
     
     smallest = min(dfs, key=len)
     merged = smallest.copy()
+    merged["created_at"] = pd.to_datetime(merged["created_at"])
 
     tolerance = pd.Timedelta(seconds=10)
 
@@ -225,15 +228,24 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
     if fill not in ['ffill', 'bfill', 'linear', 'time']:
         raise ValueError("Invalid fill method")
     
-    print(f"Merging {len(dfs)} DataFrames: {', '.join([df.columns[1] for df in dfs])}")
+    # Filter out empty DataFrames
+    non_empty_dfs = [df for df in dfs if len(df) > 0]
+    if not non_empty_dfs:
+        # Return empty DataFrame with expected columns and correct dtypes
+        sensor_columns = ['created_at'] + [df.columns[1] for df in dfs]
+        empty_df = pd.DataFrame(columns=sensor_columns)
+        empty_df['created_at'] = pd.Series(dtype='datetime64[ns]')
+        return empty_df
     
-    largest = max(dfs, key=len)
+    print(f"Merging {len(non_empty_dfs)} DataFrames: {', '.join([df.columns[1] for df in non_empty_dfs])}")
+    
+    largest = max(non_empty_dfs, key=len)
     merged = largest.copy()
-
+    merged["created_at"] = pd.to_datetime(merged["created_at"])
     # Increased tolerance to 30 seconds
     tolerance = pd.Timedelta(seconds=10)
 
-    for df in dfs:
+    for df in non_empty_dfs:
         if df.equals(largest):
             continue
         merged = pd.merge_asof(
@@ -258,7 +270,6 @@ def merge_to_largest(*dfs: pd.DataFrame, fill: str = 'ffill') -> pd.DataFrame:
 
     # Round created_at to nearest second
     merged['created_at'] = merged['created_at'].dt.round('s')
-
-    print(f"the merged we return {merged}")
     
     return merged
+    
