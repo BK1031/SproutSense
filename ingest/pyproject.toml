@@ -17,7 +17,7 @@ pandas = "^2.2.3"
 numpy = "^2.2.4"
 sqlalchemy = "^2.0.40"
 joblib = "^1.4.2"
-requests = "^2.32.3"
+requests = "^2.32.4"
 scikit-learn = "^1.6.1"
 
 [tool.poetry.group.dev.dependencies]
