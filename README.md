@@ -1,6 +1,8 @@
 # SproutSense
 
-SproutSense is a network of smart sensors designed to provide farmers with real-time environmental data to optimize agricultural practices.
+**SproutSense** is a network of smart environmental sensors designed to help farmers monitor real-time field conditions and optimize agricultural practices. This repository contains the source code for the web dashboard and backend server.
+
+To view the custom PCB hardware repository, visit: [capstone_PCB](https://github.com/jchanDev/capstone_PCB)
 
 ## Getting Started
 
