@@ -4,7 +4,7 @@
 
 To view the custom PCB hardware repository, visit: [capstone_PCB](https://github.com/jchanDev/capstone_PCB)
 
-Check out our paper: [Real-Time Environment Monitoring for Sustainable Agricultural Practices](https://github.com/bk1031/sprout_sense/itc25.pdf), which was accepted to the 2025 International Telemetering Conference, and will be published in their [2025 (Vol. 60) journal](https://repository.arizona.edu/handle/10150/575867).
+Check out our paper: [Real-Time Environment Monitoring for Sustainable Agricultural Practices](https://github.com/BK1031/SproutSense/blob/main/itc25.pdf), which was accepted to the 2025 International Telemetering Conference, and will be published in their [2025 (Vol. 60) journal](https://repository.arizona.edu/handle/10150/575867).
 
 ## Getting Started
 
