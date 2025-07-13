@@ -46,7 +46,7 @@ export function AIRecommendationCard() {
 
     setLoading(true);
     try {
-      // 1. Fetch base station info (assuming ID = 1)
+      // 1. Fetch base station info (assuming ID = 2)
       const baseRes = await axios.get(`${BACKEND_URL}/base-station/2`);
       const { latitude, longitude } = baseRes.data;
 
@@ -67,65 +67,63 @@ export function AIRecommendationCard() {
   };
 
   return (
-    <Card className="h-full w-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex flex-row items-center gap-2">
-          <Bot className="h-5 w-5 text-muted-foreground" />
-          <span className="text-xl font-semibold">AI Recommendation</span>
+    <Card className="h-[200px] w-full p-2">
+      <CardHeader className="flex flex-row items-center justify-between px-2 pb-1">
+        <CardTitle className="flex flex-row items-center gap-1 text-lg">
+          <Bot className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">AI Recommendation</span>
         </CardTitle>
         <Button
           onClick={fetchPrediction}
           variant="ghost"
           size="sm"
-          className="h-6 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+          className="h-5 px-2 py-0 text-xs text-muted-foreground hover:text-foreground"
         >
           Refresh
         </Button>
       </CardHeader>
-      <CardContent className="grid gap-2 pt-2">
+      <CardContent className="grid gap-1 px-2 pt-0">
         {loading ? (
-          <span className="text-lg font-semibold">Loading...</span>
+          <span className="text-sm font-medium">Loading...</span>
         ) : recommendation ? (
-          <span className="text-lg font-semibold text-green-700 dark:text-green-400">
+          <span className="text-sm font-medium text-green-700 dark:text-green-400">
             {recommendation}
           </span>
         ) : (
-          <span className="text-muted-foreground">No prediction yet</span>
+          <span className="text-xs text-muted-foreground">
+            No prediction yet
+          </span>
         )}
         {avgMoisture !== null && avgTemperature !== null && (
-          <div className="mt-2 grid gap-6">
+          <div className="grid gap-2">
             {/* Moisture Block */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Droplets className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1">
+                <Droplets className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <span className="text-sm font-medium text-foreground">
-                    Moisture
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Avg from {displayDate}
+                  <span className="font-medium">Moisture</span>
+                  <p className="text-[12px] text-muted-foreground">
+                    Avg {displayDate}
                   </p>
                 </div>
               </div>
-              <span className="text-2xl font-bold text-neutral-800 dark:text-white">
+              <span className="text-sm font-bold text-neutral-800 dark:text-white">
                 {avgMoisture.toFixed(2)}
               </span>
             </div>
 
             {/* Temperature Block */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Thermometer className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1">
+                <Thermometer className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <span className="text-sm font-medium text-foreground">
-                    Temperature
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Avg from {displayDate}
+                  <span className="font-medium">Temp</span>
+                  <p className="text-[12px] text-muted-foreground">
+                    Avg {displayDate}
                   </p>
                 </div>
               </div>
-              <span className="text-2xl font-bold text-neutral-800 dark:text-white">
+              <span className="text-sm font-bold text-neutral-800 dark:text-white">
                 {avgTemperature.toFixed(2)}°C
               </span>
             </div>

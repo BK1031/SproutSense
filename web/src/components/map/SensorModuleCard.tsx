@@ -9,6 +9,8 @@ import {
   LocateOff,
   SearchCode,
   AreaChart,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,19 +22,17 @@ import axios from "axios";
 import { getAxiosErrorMessage } from "@/lib/axios-error-handler";
 import { useEffect, useState } from "react";
 import { useRefreshInterval } from "@/lib/store";
-import { useNavigate } from "react-router-dom";
+import { useAlerts } from "@/hooks/useAlerts";
 
-const SensorModuleCard = ({ module }: { module: SensorModule }) => {
-  const navigate = useNavigate();
-  const [sensorData, setSensorData] = useState<{
-    temperature: number;
-    humidity: number;
-    soil_moisture: number;
-    lux: number;
-    nitrogen: number;
-    phosphorus: number;
-    potassium: number;
-  }>({
+interface SensorModuleCardProps {
+  module: SensorModule;
+  setNavigationURL: React.Dispatch<React.SetStateAction<string | null>>;
+}
+const SensorModuleCard = ({
+  module,
+  setNavigationURL,
+}: SensorModuleCardProps) => {
+  const [sensorData, setSensorData] = useState({
     temperature: 0,
     humidity: 0,
     soil_moisture: 0,
@@ -42,6 +42,14 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
     potassium: 0,
   });
   const refreshInterval = useRefreshInterval();
+  const { alerts, criticalAlerts, allAlerts } = useAlerts();
+  const moduleAlerts = alerts.filter((msg) => msg.includes(`SM ${module.id} `));
+  const moduleCriticalAlerts = criticalAlerts.filter((msg) =>
+    msg.includes(`SM ${module.id} `),
+  );
+  const moduleAllAlerts =
+    allAlerts?.filter((msg) => msg.includes(`SM ${module.id} `)) || [];
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   const getOnlineStatus = () => {
     const lastPingTime = new Date(module.last_ping + "Z").getTime();
@@ -71,7 +79,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
   }, [refreshInterval]);
 
   return (
-    <div className="min-w-[350px] overflow-hidden">
+    <div className="scrollbar-hide max-h-[90vh] overflow-y-auto">
       <div className="rounded-t-md border-b bg-neutral-50 p-4 dark:bg-black">
         <div className="flex items-start justify-between">
           <div>
@@ -170,13 +178,80 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
             </Card>
           </div>
         </div>
+        {(moduleCriticalAlerts.length > 0 || moduleAlerts.length > 0) && (
+          <div className="space-y-2 border-t border-red-200 p-4 dark:border-red-800">
+            <h4 className="text-sm font-medium text-red-600 dark:text-red-400">
+              Issues Detected
+            </h4>
+            {moduleCriticalAlerts.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+                  Critical Alerts
+                </p>
+                <ul className="list-inside list-disc text-sm text-red-700 dark:text-red-400">
+                  {moduleCriticalAlerts.map((alert, idx) => (
+                    <li key={`crit-${idx}`}>
+                      {alert
+                        .replace(/^SM \d+ - /, "")
+                        .replace(/^([a-z])/, (m) => m.toUpperCase())}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {moduleAlerts.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-yellow-600 dark:text-yellow-400">
+                  Warnings
+                </p>
+                <ul className="list-inside list-disc text-sm text-yellow-600 dark:text-yellow-400">
+                  {moduleAlerts.map((alert, idx) => (
+                    <li key={`warn-${idx}`}>
+                      {alert
+                        .replace(/^SM \d+ - /, "")
+                        .replace(/^([a-z])/, (m) => m.toUpperCase())}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
+        {moduleAllAlerts.length > 0 && (
+          <div className="mt-4 border-t pt-2">
+            <button
+              className="flex items-center text-sm font-medium text-foreground hover:underline"
+              onClick={() => setShowAllAlerts((prev) => !prev)}
+            >
+              {showAllAlerts ? (
+                <ChevronDown className="mr-1 h-4 w-4" />
+              ) : (
+                <ChevronRight className="mr-1 h-4 w-4" />
+              )}
+              All Alerts (Including Suppressed)
+            </button>
+
+            {showAllAlerts && (
+              <div className="mt-2 max-h-40 overflow-y-auto pr-1">
+                <ul className="list-inside list-disc text-sm text-muted-foreground">
+                  {moduleAllAlerts.map((alert, idx) => {
+                    const cleaned = alert
+                      .replace(/^SM \d+ - /, "")
+                      .replace(/^([a-z])/, (m) => m.toUpperCase());
+                    return <li key={idx}>{cleaned}</li>;
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="p-4">
         <div className="flex gap-2">
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/modules/${module.id}`)}
+            onClick={() => setNavigationURL(`/modules/${module.id}`)}
           >
             <AreaChart className="mr-2 h-4 w-4" />
             Explore Data
@@ -184,7 +259,7 @@ const SensorModuleCard = ({ module }: { module: SensorModule }) => {
           <Button
             variant="outline"
             className="flex-1 text-primary"
-            onClick={() => navigate(`/query/add?smid=${module.id}`)}
+            onClick={() => setNavigationURL(`/query/add?smid=${module.id}`)}
           >
             <SearchCode className="mr-2 h-4 w-4" />
             Add to Query
